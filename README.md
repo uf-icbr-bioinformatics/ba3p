@@ -9,8 +9,17 @@
 Ba3p is designed to run in an HPC environment, and requires the **submit** and **actor** packages.  Please contact the author for details.
 
 ## Basic usage
+
 All ba3p tools are invoked as follows:
 
 ```bash
-> ba3p <tool> <onfiguration-file>
+$ **ba3p** toolName configurationFile
 ```
+
+You can also enter:
+
+```bash
+$ **ba3p** **help** toolName
+```
+
+to access the interactive manual for each tool.
