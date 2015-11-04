@@ -1,7 +1,6 @@
-# ba3p
-### Bacterial alignment, assembly, and annotation pipelines
+# ba3p - Bacterial alignment, assembly, and annotation
 
-**Ba3p** is a collection of pipeline scripts to perform high-throughput analysis of NGS data from bacterial genomes. It currently includes the following tools:
+**Ba3p** is a collection of pipelines and scripts to perform high-throughput analysis of NGS data from bacterial genomes. It currently includes the following tools:
 
 - [snpcall](#user-content-snpcall)
 
@@ -11,10 +10,10 @@ In addition, this package provides a few utilities that are used by ba3p tools, 
 - sam-remap.py
 - vcf-remap.py
 
-## Requirements
+### Requirements
 Ba3p is designed to run in an HPC environment, and requires the **submit** and **actor** packages.  Please contact the author for details.
 
-## Basic usage
+### Basic usage
 
 All ba3p tools are invoked as follows:
 
@@ -134,3 +133,26 @@ fastq1=TESTRUN_S1_L001_R2.fastq.gz
 fastq1=TESTRUN_S2_L001_R1.fastq.gz
 fastq1=TESTRUN_S2_L001_R2.fastq.gz
 ```
+
+## VCFmerger.py
+**VCFmerger.py** is a program to combine multiple VCF files (each one possibly containing data for one or more samples) into pseudo-FASTA files. A pseudo-fasta file is a FASTA file containing multiple sequences, one for each sample, and each sequence is composed of the nucleotides found in variant positions only. For example, if the input to VCFmerger consists of three VCF files (containing a single sample each) with 10 variant positions in total, the output file will be a pseudo-FASTA file containing three sequences of 10nt each.
+
+### Syntax
+VCFmerger.py is invoked as follows:
+```
+VCFmerger.py [options] vcffiles ...
+```
+The following command-line options are available (each option has both a short and a long form):
+
+Short | Long | Description
+------|------|------------
+  -m  |--missingChar C  | Use character C to represent unknown alleles (otherwise the reference allele will be used).
+  -o  |--outPattern P   | Use string P as the name of the output file(s). If P contains the sequence {}, it will be replaced by each chromosome name.
+  -b  |--bothAlleles    | If specified, the program will print two bases for each SNP, according to the genotype (AA, AB, or BB).
+  -r  |--removeMissing  | If specified, the program will only print SNPs that appear in all the VCF files.
+  -q  |--quality Q      | Use Q as the quality threshold. If not specified, the quality threshold will be read from the VCF file, if present, otherwise it will be set to the default value of 30.
+  -R  |--report R       | Write the list of output files produced to a report file R in tab-delimited format. Each line contains three columns: chromosome, filename, number of SNPs.
+  -i  |--impact I       | If snpEff annotations are present, only retain SNPs with a putative impact I or higher. I should be one of HIGH, MODERATE, LOW, or MODIFIER.
+  -a|--annotation A[,A...]  | If snpEff annotations are present, only retain SNPs having an annotation matching one or more of the supplied annotations A. See http://snpeff.sourceforge.net/VCFannotationformat_v1.0.pdf for a list of all valid annotations, or use the -l option.
+  -s|--saveSNPs S           | Save SNPs to tab-delimited file S.
+  -l|--listEff              | List all valid values for snpEff impact and annotation. When the long form is used, also prints a short description of each annotation (if available).
