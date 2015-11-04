@@ -75,3 +75,56 @@ In addition, it may contain:
 snpeffdb = (name of snpEff database)
 mapfile = (mapping between reference and snpEff chromosome names).
 ```
+The remainder of the configuration file is composed of one section
+for each sample, labeled with its name. For example, if you defined:
+
+```python
+samples = smpl1,smpl2
+```
+
+the corresponding sections should be labeled **[smpl1]**, **[smpl2]**.
+
+Each section should indicate the name of the two paired-end fastq files:
+```python
+fastq1 = (file with left-side reads)
+fastq2 = (file with righ-side reads)
+```
+Please note that all pathnames should be either absolute (ie, starting
+with a /) or relative to the directory you are calling the script from.
+
+### Output
+When snpcall starts it will create a directory with the 
+name indicated by the 'title' variable, and will write all its output 
+files to that directory.
+
+At the end, the tool will create a zip file with the contents of the
+output directory, excluding temporary files and other unnecessary files.
+The zip file will also include an HTML file (called **index.html**) containing
+a full report of the analysis that was performed, and links to all output
+files.
+
+The easiest way to access the pipeline results is to download the zip file 
+to your computer and uncompress it, then open the index.html file with 
+any web browser.
+
+### Example
+This is an example configuration file for two pairs of fastq files
+from the human genome. You can copy and paste the following text to a new file
+and use it as a template to create your own.
+
+```conf
+[General]
+title = testrun
+reference = /lfs/scratch/bio/reference/samtools/hg19.fa
+genome = /lfs/scratch/bio/reference/bowtie2/hg19
+snpeffdb = GRCh38.76
+samples = sample1,sample2
+
+[sample1]
+fastq1=TESTRUN_S1_L001_R1.fastq.gz
+fastq1=TESTRUN_S1_L001_R2.fastq.gz
+
+[sample2]
+fastq1=TESTRUN_S2_L001_R1.fastq.gz
+fastq1=TESTRUN_S2_L001_R2.fastq.gz
+```
