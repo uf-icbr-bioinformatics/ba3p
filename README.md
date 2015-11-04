@@ -62,7 +62,7 @@ assignments of values to variables in the form: variable = value.
 The first section must be called **[General]**, and must contain the following
 variables:
 
-```python
+```conf
 title = (name of your analysis)
 reference = (path to reference sequence in fasta format)
 genome = (path to bowtie2 index of genome)
@@ -71,21 +71,21 @@ samples = (names of samples separated by commas).
 
 In addition, it may contain:
 
-```python
+```conf
 snpeffdb = (name of snpEff database)
 mapfile = (mapping between reference and snpEff chromosome names).
 ```
 The remainder of the configuration file is composed of one section
 for each sample, labeled with its name. For example, if you defined:
 
-```python
+```conf
 samples = smpl1,smpl2
 ```
 
 the corresponding sections should be labeled **[smpl1]**, **[smpl2]**.
 
 Each section should indicate the name of the two paired-end fastq files:
-```python
+```conf
 fastq1 = (file with left-side reads)
 fastq2 = (file with righ-side reads)
 ```
