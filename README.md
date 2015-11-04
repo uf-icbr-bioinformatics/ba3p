@@ -3,7 +3,7 @@
 
 **Ba3p** is a collection of pipeline scripts to perform high-throughput analysis of NGS data from bacterial genomes. It currently includes the following tools:
 
-- [snpcall](#snpcall)
+- [snpcall](#user-content-snpcall)
 
 In addition, this package provides a few utilities that are used by ba3p tools, but can also be used independently if desired:
 
