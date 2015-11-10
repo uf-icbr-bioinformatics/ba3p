@@ -94,15 +94,21 @@ for run in MSC.runs:
     in2 = os.path.basename(fastq2)
     run['fqcdir1'] = ACT.setFileExt(in1, ".before.fqc", remove=[".fastq", ".gz"])
     run['fqcdir2'] = ACT.setFileExt(in2, ".before.fqc", remove=[".fastq", ".gz"])
+    run['fqcdir1a'] = ACT.setFileExt(in1, ".after.fqc", remove=[".fastq", ".gz"])
+    run['fqcdir2a'] = ACT.setFileExt(in2, ".after.fqc", remove=[".fastq", ".gz"])
     ACT.mkdir(run['fqcdir1'])
     ACT.mkdir(run['fqcdir2'])
+    ACT.mkdir(run['fqcdir1a'])
+    ACT.mkdir(run['fqcdir2a'])
     run['sickle1'] = ACT.setFileExt(in1, ".sickle.fastq", remove=[".fastq", ".gz"])
     run['sickle2'] = ACT.setFileExt(in2, ".sickle.fastq", remove=[".fastq", ".gz"])
     this = ACT.submit("sickle.qsub {} {} {} {}".format(fastq1, fastq2, run['sickle1'], run['sickle2']), done="sickle.done")
-    fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, run['fqcdir1']), done="fqc1.done")
-    fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, run['fqcdir2']), done="fqc2.done")
+    fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, run['fqcdir1']), done="fqc.done")
+    fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, run['fqcdir2']), done="fqc.done")
+    fqc3 = ACT.submit("fastqc.qsub {} {}".format(run['sickle1'], run['fqcdir1a']), after=this, done="fqc.done")
+    fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), after=this, done="fqc.done")
 
-ACT.wait([('sickle.done', MSC.nruns), ('fqc1.done', MSC.nruns), ('fqc2.done', MSC.nruns)])
+ACT.wait([('sickle.done', MSC.nruns), ('fqc.done', MSC.nruns * 4)])
 
 #
 # Once all the bowties are done, we can collect stats (number of aligned reads),
