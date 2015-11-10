@@ -1,0 +1,549 @@
+{
+    "a_galaxy_workflow": "true", 
+    "annotation": "", 
+    "format-version": "0.1", 
+    "name": "BA3P - Snpcall", 
+    "steps": {
+        "0": {
+            "annotation": "Forward 250 bp reads", 
+            "id": 0, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "Forward 250 bp reads", 
+                    "name": "Input - Paired1 "
+                }
+            ], 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 203, 
+                "top": 200
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input - Paired1 \"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": []
+        }, 
+        "1": {
+            "annotation": "Reverse 250 bp reads", 
+            "id": 1, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "Reverse 250 bp reads", 
+                    "name": "Input - Paired2"
+                }
+            ], 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 200, 
+                "top": 431
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input - Paired2\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": []
+        }, 
+        "2": {
+            "annotation": "", 
+            "id": 2, 
+            "input_connections": {
+                "readtype|input_paired1": {
+                    "id": 0, 
+                    "output_name": "output"
+                }, 
+                "readtype|input_paired2": {
+                    "id": 1, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Sickle", 
+            "outputs": [
+                {
+                    "name": "output_single", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_combo", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_combo_single", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_paired1", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "output_paired2", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "output_paired_single", 
+                    "type": "fastq"
+                }
+            ], 
+            "position": {
+                "left": 484.0001220703125, 
+                "top": 406
+            }, 
+            "post_job_actions": {
+                "ChangeDatatypeActionoutput_paired1": {
+                    "action_arguments": {
+                        "newtype": "fastqsanger"
+                    }, 
+                    "action_type": "ChangeDatatypeAction", 
+                    "output_name": "output_paired1"
+                }, 
+                "ChangeDatatypeActionoutput_paired2": {
+                    "action_arguments": {
+                        "newtype": "fastqsanger"
+                    }, 
+                    "action_type": "ChangeDatatypeAction", 
+                    "output_name": "output_paired2"
+                }, 
+                "HideDatasetActionoutput_combo": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_combo"
+                }, 
+                "HideDatasetActionoutput_combo_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_combo_single"
+                }, 
+                "HideDatasetActionoutput_paired_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_paired_single"
+                }, 
+                "HideDatasetActionoutput_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_single"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/nikhil-joshi/sickle/sickle/1.33", 
+            "tool_state": "{\"__page__\": 0, \"length_threshold\": \"\\\"50\\\"\", \"no_five_prime\": \"\\\"False\\\"\", \"__rerun_remap_job_id__\": null, \"readtype\": \"{\\\"single_or_paired\\\": \\\"pe_sep\\\", \\\"input_paired1\\\": null, \\\"input_paired2\\\": null, \\\"__current_case__\\\": 2}\", \"trunc_n\": \"\\\"False\\\"\", \"qual_threshold\": \"\\\"20\\\"\"}", 
+            "tool_version": "1.33", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "3": {
+            "annotation": "Ref 1 - FPR4757 - Bowtie", 
+            "id": 3, 
+            "input_connections": {
+                "library|input_1": {
+                    "id": 2, 
+                    "output_name": "output_paired1"
+                }, 
+                "library|input_2": {
+                    "id": 2, 
+                    "output_name": "output_paired2"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Bowtie2", 
+            "outputs": [
+                {
+                    "name": "output_unaligned_reads_l", 
+                    "type": "fastqsanger"
+                }, 
+                {
+                    "name": "output_unaligned_reads_r", 
+                    "type": "fastqsanger"
+                }, 
+                {
+                    "name": "output", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 889.0001220703125, 
+                "top": 417
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_unaligned_reads_l": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_unaligned_reads_l"
+                }, 
+                "HideDatasetActionoutput_unaligned_reads_r": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_unaligned_reads_r"
+                }, 
+                "RenameDatasetActionoutput": {
+                    "action_arguments": {
+                        "newname": "Bowtie_Ref1"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/bowtie2/bowtie2/0.2", 
+            "tool_state": "{\"__page__\": 0, \"read_group\": \"{\\\"rgpl\\\": \\\"ILLUMINA\\\", \\\"selection\\\": \\\"yes\\\", \\\"rgsm\\\": \\\"SM_${suffixName}\\\", \\\"rgid\\\": \\\"ID_${suffixName}\\\", \\\"__current_case__\\\": 0, \\\"rglb\\\": \\\"LB_${suffixName}\\\"}\", \"__rerun_remap_job_id__\": null, \"unaligned_file\": \"\\\"True\\\"\", \"library\": \"{\\\"min_insert\\\": \\\"0\\\", \\\"type\\\": \\\"paired\\\", \\\"input_2\\\": null, \\\"__current_case__\\\": 1, \\\"input_1\\\": null, \\\"max_insert\\\": \\\"1200\\\"}\", \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"reference_genome\": \"{\\\"source\\\": \\\"indexed\\\", \\\"__current_case__\\\": 0, \\\"index\\\": \\\"v_cholerae_o1_2010el_1786\\\"}\", \"params\": \"{\\\"full\\\": \\\"no\\\", \\\"__current_case__\\\": 1}\"}", 
+            "tool_version": "0.2", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "4": {
+            "annotation": "", 
+            "id": 4, 
+            "input_connections": {
+                "inputFile": {
+                    "id": 3, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Add or Replace Groups", 
+            "outputs": [
+                {
+                    "name": "outFile", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 1209.0001220703125, 
+                "top": 414
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutFile": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "outFile"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/picard/picard_ARRG/1.56.0", 
+            "tool_state": "{\"rgpl\": \"\\\"ILLUMINA\\\"\", \"outputFormat\": \"\\\"True\\\"\", \"__page__\": 0, \"rgsm\": \"\\\"SM_${suffixName}\\\"\", \"readGroupOpts\": \"{\\\"rgOpts\\\": \\\"preSet\\\", \\\"__current_case__\\\": 0}\", \"rgid\": \"\\\"ID_${suffixName}\\\"\", \"rgpu\": \"\\\"PU_${suffixName}\\\"\", \"rglb\": \"\\\"LB_${suffixName}\\\"\", \"__rerun_remap_job_id__\": null, \"inputFile\": \"null\"}", 
+            "tool_version": "1.56.0", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "5": {
+            "annotation": "", 
+            "id": 5, 
+            "input_connections": {
+                "input_file": {
+                    "id": 4, 
+                    "output_name": "outFile"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Mark Duplicate reads", 
+            "outputs": [
+                {
+                    "name": "out_file", 
+                    "type": "bam"
+                }, 
+                {
+                    "name": "html_file", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 1525.0000610351562, 
+                "top": 422
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionhtml_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "html_file"
+                }, 
+                "HideDatasetActionout_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "out_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/picard/rgPicardMarkDups/1.56.0", 
+            "tool_state": "{\"remDups\": \"\\\"True\\\"\", \"assumeSorted\": \"\\\"True\\\"\", \"input_file\": \"null\", \"readRegex\": \"\\\"[a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"Dupes Marked\\\"\", \"optDupeDist\": \"\\\"100\\\"\"}", 
+            "tool_version": "1.56.0", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "6": {
+            "annotation": "", 
+            "id": 6, 
+            "input_connections": {
+                "reference_source|input_bam": {
+                    "id": 5, 
+                    "output_name": "out_file"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Realigner Target Creator", 
+            "outputs": [
+                {
+                    "name": "output_interval", 
+                    "type": "gatk_interval"
+                }, 
+                {
+                    "name": "output_log", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 1864.0000610351562, 
+                "top": 597.0000152587891
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_interval": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_interval"
+                }, 
+                "HideDatasetActionoutput_log": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_log"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/realigner_target_creator/gatk_realigner_target_creator/0.0.4", 
+            "tool_state": "{\"analysis_param_type\": \"{\\\"analysis_param_type_selector\\\": \\\"basic\\\", \\\"__current_case__\\\": 0}\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"gatk_param_type\": \"{\\\"gatk_param_type_selector\\\": \\\"basic\\\", \\\"__current_case__\\\": 0}\", \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"v_cholerae_o1_2010el_1786\\\"}, \\\"reference_source_selector\\\": \\\"cached\\\", \\\"input_bam\\\": null, \\\"__current_case__\\\": 0}\", \"rod_bind\": \"[]\"}", 
+            "tool_version": "0.0.4", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "7": {
+            "annotation": "", 
+            "id": 7, 
+            "input_connections": {
+                "reference_source|input_bam": {
+                    "id": 5, 
+                    "output_name": "out_file"
+                }, 
+                "target_intervals": {
+                    "id": 6, 
+                    "output_name": "output_interval"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Indel Realigner", 
+            "outputs": [
+                {
+                    "name": "output_bam", 
+                    "type": "bam"
+                }, 
+                {
+                    "name": "output_log", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 2133.0000610351562, 
+                "top": 400
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_bam": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_bam"
+                }, 
+                "HideDatasetActionoutput_log": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_log"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/indel_realigner/gatk_indel_realigner/0.0.6", 
+            "tool_state": "{\"analysis_param_type\": \"{\\\"analysis_param_type_selector\\\": \\\"basic\\\", \\\"__current_case__\\\": 0}\", \"__page__\": 0, \"knowns_only\": \"\\\"False\\\"\", \"gatk_param_type\": \"{\\\"gatk_param_type_selector\\\": \\\"basic\\\", \\\"__current_case__\\\": 0}\", \"lod_threshold\": \"\\\"5.0\\\"\", \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"target_intervals\": \"null\", \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"v_cholerae_o1_2010el_1786\\\"}, \\\"reference_source_selector\\\": \\\"cached\\\", \\\"input_bam\\\": null, \\\"__current_case__\\\": 0}\", \"__rerun_remap_job_id__\": null, \"rod_bind\": \"[]\"}", 
+            "tool_version": "0.0.6", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "8": {
+            "annotation": "", 
+            "id": 8, 
+            "input_connections": {
+                "input_file": {
+                    "id": 7, 
+                    "output_name": "output_bam"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Paired Read Mate Fixer", 
+            "outputs": [
+                {
+                    "name": "out_file", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 2457.0000762939453, 
+                "top": 408
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionout_file": {
+                    "action_arguments": {
+                        "newname": "FinalBAM"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "out_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/picard/rgPicFixMate/1.56.0", 
+            "tool_state": "{\"__page__\": 0, \"outputFormat\": \"\\\"True\\\"\", \"input_file\": \"null\", \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"FinalBam\\\"\", \"sortOrder\": \"\\\"coordinate\\\"\"}", 
+            "tool_version": "1.56.0", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "9": {
+            "annotation": "", 
+            "id": 9, 
+            "input_connections": {
+                "input_dataset": {
+                    "id": 8, 
+                    "output_name": "out_file"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Export dataset", 
+            "outputs": [
+                {
+                    "name": "output_info", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 2673.4500885009766, 
+                "top": 580.5833282470703
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_info": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_info"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "exportDataset", 
+            "tool_state": "{\"input_dataset\": \"null\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"output_file\": \"\\\"/scratch/lfs/ariva/cholera/\\\"\"}", 
+            "tool_version": "0.0.1", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "10": {
+            "annotation": "", 
+            "id": 10, 
+            "input_connections": {
+                "reference_source|input_bams_0|input_bam": {
+                    "id": 8, 
+                    "output_name": "out_file"
+                }
+            }, 
+            "inputs": [], 
+            "name": "FreeBayes", 
+            "outputs": [
+                {
+                    "name": "output_vcf", 
+                    "type": "vcf"
+                }, 
+                {
+                    "name": "output_failed_alleles_bed", 
+                    "type": "bed"
+                }, 
+                {
+                    "name": "output_trace", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 2731.0000610351562, 
+                "top": 409.5
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/freebayes/freebayes/freebayes-0.9.14", 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"options_type\": \"{\\\"options_type_selector\\\": \\\"simple\\\", \\\"__current_case__\\\": 1}\", \"reference_source\": \"{\\\"ref_file\\\": \\\"v_cholerae_o1_2010el_1786\\\", \\\"reference_source_selector\\\": \\\"cached\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": null}], \\\"__current_case__\\\": 0}\", \"target_limit_type\": \"{\\\"target_limit_type_selector\\\": \\\"do_not_limit\\\", \\\"__current_case__\\\": 0}\"}", 
+            "tool_version": "freebayes-0.9.14", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "11": {
+            "annotation": "", 
+            "id": 11, 
+            "input_connections": {
+                "input_dataset": {
+                    "id": 10, 
+                    "output_name": "output_vcf"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Export dataset", 
+            "outputs": [
+                {
+                    "name": "output_info", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 3057.6167602539062, 
+                "top": 325.8000030517578
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_info": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_info"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "exportDataset", 
+            "tool_state": "{\"input_dataset\": \"null\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"output_file\": \"\\\"/scratch/lfs/ariva/cholera/\\\"\"}", 
+            "tool_version": "0.0.1", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "12": {
+            "annotation": "", 
+            "id": 12, 
+            "input_connections": {
+                "input": {
+                    "id": 10, 
+                    "output_name": "output_vcf"
+                }
+            }, 
+            "inputs": [], 
+            "name": "SnpEff", 
+            "outputs": [
+                {
+                    "name": "snpeff_output", 
+                    "type": "vcf"
+                }, 
+                {
+                    "name": "statsFile", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 3142.666748046875, 
+                "top": 429.56666564941406
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/iuc/snpeff/snpEff/4.0.0", 
+            "tool_state": "{\"spliceSiteSize\": \"\\\"2\\\"\", \"filterHomHet\": \"\\\"no_filter\\\"\", \"udLength\": \"\\\"5000\\\"\", \"inputFormat\": \"\\\"vcf\\\"\", \"filterIn\": \"\\\"no_filter\\\"\", \"outputConditional\": \"{\\\"outputFormat\\\": \\\"vcf\\\", \\\"__current_case__\\\": 0}\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"filterOut\": \"null\", \"generate_stats\": \"\\\"True\\\"\", \"noLog\": \"\\\"True\\\"\", \"chr\": \"\\\"\\\"\", \"intervals\": \"null\", \"snpDb\": \"{\\\"extra_annotations\\\": null, \\\"regulation\\\": null, \\\"genomeVersion\\\": null, \\\"genomeSrc\\\": \\\"cached\\\", \\\"__current_case__\\\": 0}\", \"offset\": \"\\\"default\\\"\", \"input\": \"null\", \"transcripts\": \"null\", \"annotations\": \"null\", \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\"}", 
+            "tool_version": "4.0.0", 
+            "type": "tool", 
+            "user_outputs": []
+        }
+    }
+}

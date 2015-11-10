@@ -1,5 +1,3 @@
-# (c) 2015, A. Riva, DiBiG
-
 import csv
 import os.path
 
@@ -21,15 +19,13 @@ def fixPath(path):
     else:
         return "../" + path
 
-class ba3pMSC():
+class ba3pVOPT():
     valid = True                # Set to False in case of configuration errors
-    title = "snpcall"           # Title of run
+    title = "denovo"            # Title of run
     runs = []                   # List of runs
     nruns = 0                   # Number of runs
     reference = None            # Genome reference sequence (FASTA)
     genome = None               # Bowtie2 index of genome
-    mapfile = None              # For chromosome renaming
-    snpeffdb = None             # For snpEff annotations
 
     def __init__(self, ACT):
         conffile = ACT.Arguments[0]
@@ -37,8 +33,6 @@ class ba3pMSC():
         self.title = ACT.getConf("title")
         self.reference = ACT.getConf("reference")
         self.genome = ACT.getConf("genome")
-        self.mapfile = ACT.getConf("mapfile")
-        self.snpeffdb = ACT.getConf("snpeffdb")
 
         runnames = ACT.getConf("samples").split(",")
         runnames = [ s.strip() for s in runnames ]
@@ -63,8 +57,6 @@ def dumpmsc(msc):
     message("Title: {}", msc.title)
     message("Reference: {}", msc.reference)
     message("Genome index: {}", msc.genome)
-    message("Mapfile: {}", msc.mapfile)
-    message("SnpEffDB: {}", msc.snpeffdb)
     message("{} samples:", msc.nruns)
     for run in msc.runs:
         message("  Name: {}", run['name'])
@@ -72,7 +64,7 @@ def dumpmsc(msc):
         message("  Fastq2: {}", run['fastq2'])
         message("")
 
-MSC = ba3pMSC(ACT)
+MSC = ba3pVOPT(ACT)
 
 if not MSC.valid:
     message("Script cannot be executed due to configuration errors.")
@@ -81,18 +73,12 @@ dumpmsc(MSC)
 
 # Script definition 
 
-ACT.script(MSC.title, "BA3P - SNP calling and annotation", "BA3P")
+ACT.script(MSC.title, "BA3P - De-novo Assembly", "BA3P")
 ACT.begin(timestamp=False)
 
 ACT.scene(1, "General configuration")
-ACT.reportf("""Sample name: <b>{}</b><br>
-Reference genome: <b>{}</b><br>
-Bowtie2 index: <B>{}</b><br>
+ACT.reportf("""Experiment name: <b>{}</b><br>
 """.format(MSC.title, MSC.reference, MSC.genome))
-if MSC.mapfile != None:
-    ACT.reportf("Chromosome mapping: <b>{}</b><br>".format(MSC.mapfile))
-if MSC.snpeffdb != None:
-    ACT.reportf("snpEff database: <b>{}</b><br>".format(MSC.snpeffdb))
 ACT.reportf("Samples and input files:<br>")
 ACT.table([ [r['name'], r['fastq1'], r['fastq2'] ] for r in MSC.runs],
           header=["Sample", "Left reads", "Right reads"],
