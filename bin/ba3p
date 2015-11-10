@@ -2,6 +2,10 @@
 
 module load dibig_tools
 
+# Change the following variable to point to the location
+# where scripts are installed if not on HiPerGator.
+SCRIPTS_DIR=$HPC_BA3P_DIR
+
 command=$1
 shift
 
@@ -12,7 +16,7 @@ case "$command" in
 	then
 	    echo "Please use \'help\' followed by a command name to get help on that command."
 	else
-	    $HPC_BA3P_DIR/lib/scripts/help-${cmd}.py
+	    $SCRIPTS_DIR/lib/scripts/help-${cmd}.py
 	fi
 	exit
 	;;
@@ -26,6 +30,6 @@ then
   echo Please specify which command to run\!
   echo Currently available commands: help, snpcall
 else
-  actor.py -d $HPC_BA3P_DIR/lib/scripts/$script -Z $*
+  actor.py -d $SCRIPTS_DIR/lib/scripts/$script -Z $*
 fi
 
