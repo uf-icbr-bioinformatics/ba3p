@@ -1,0 +1,497 @@
+{
+    "a_galaxy_workflow": "true", 
+    "annotation": "", 
+    "format-version": "0.1", 
+    "name": "BA3P - Assembly", 
+    "steps": {
+        "0": {
+            "annotation": "Forward 250 bp reads", 
+            "id": 0, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "Forward 250 bp reads", 
+                    "name": "Input - Paired1 "
+                }
+            ], 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 200, 
+                "top": 195
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input - Paired1 \"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": []
+        }, 
+        "1": {
+            "annotation": "Reverse 250 bp reads", 
+            "id": 1, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "Reverse 250 bp reads", 
+                    "name": "Input - Paired2"
+                }
+            ], 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 207, 
+                "top": 340
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input - Paired2\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": []
+        }, 
+        "2": {
+            "annotation": "", 
+            "id": 2, 
+            "input_connections": {
+                "input_file": {
+                    "id": 0, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "name": "FastQC:Read QC", 
+            "outputs": [
+                {
+                    "name": "html_file", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 508, 
+                "top": 183
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionhtml_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "html_file"
+                }, 
+                "RenameDatasetActionhtml_file": {
+                    "action_arguments": {
+                        "newname": "QC-Forward-Raw"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "html_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/fastqc/fastqc/0.52", 
+            "tool_state": "{\"__page__\": 0, \"contaminants\": \"null\", \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"QC-Forward-Raw\\\"\", \"input_file\": \"null\"}", 
+            "tool_version": "0.52", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "3": {
+            "annotation": "", 
+            "id": 3, 
+            "input_connections": {
+                "input_file": {
+                    "id": 1, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "name": "FastQC:Read QC", 
+            "outputs": [
+                {
+                    "name": "html_file", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 522, 
+                "top": 336
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionhtml_file": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "html_file"
+                }, 
+                "RenameDatasetActionhtml_file": {
+                    "action_arguments": {
+                        "newname": "QC-Reverse-Raw"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "html_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/fastqc/fastqc/0.52", 
+            "tool_state": "{\"__page__\": 0, \"contaminants\": \"null\", \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"QC-Reverse-Raw\\\"\", \"input_file\": \"null\"}", 
+            "tool_version": "0.52", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "4": {
+            "annotation": "", 
+            "id": 4, 
+            "input_connections": {
+                "readtype|input_paired1": {
+                    "id": 0, 
+                    "output_name": "output"
+                }, 
+                "readtype|input_paired2": {
+                    "id": 1, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Sickle", 
+            "outputs": [
+                {
+                    "name": "output_single", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_combo", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_combo_single", 
+                    "type": "input"
+                }, 
+                {
+                    "name": "output_paired1", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "output_paired2", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "output_paired_single", 
+                    "type": "fastq"
+                }
+            ], 
+            "position": {
+                "left": 539, 
+                "top": 498
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_combo": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_combo"
+                }, 
+                "HideDatasetActionoutput_combo_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_combo_single"
+                }, 
+                "HideDatasetActionoutput_paired_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_paired_single"
+                }, 
+                "HideDatasetActionoutput_single": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_single"
+                }, 
+                "RenameDatasetActionoutput_paired1": {
+                    "action_arguments": {
+                        "newname": "OP1"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_paired1"
+                }, 
+                "RenameDatasetActionoutput_paired2": {
+                    "action_arguments": {
+                        "newname": "OP2"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_paired2"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/nikhil-joshi/sickle/sickle/1.33", 
+            "tool_state": "{\"__page__\": 0, \"length_threshold\": \"\\\"50\\\"\", \"no_five_prime\": \"\\\"False\\\"\", \"__rerun_remap_job_id__\": null, \"readtype\": \"{\\\"single_or_paired\\\": \\\"pe_sep\\\", \\\"input_paired1\\\": null, \\\"input_paired2\\\": null, \\\"__current_case__\\\": 2}\", \"trunc_n\": \"\\\"False\\\"\", \"qual_threshold\": \"\\\"20\\\"\"}", 
+            "tool_version": "1.33", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "5": {
+            "annotation": "", 
+            "id": 5, 
+            "input_connections": {
+                "input_file": {
+                    "id": 4, 
+                    "output_name": "output_paired1"
+                }
+            }, 
+            "inputs": [], 
+            "name": "FastQC:Read QC", 
+            "outputs": [
+                {
+                    "name": "html_file", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 996, 
+                "top": 451
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionhtml_file": {
+                    "action_arguments": {
+                        "newname": "QC-Forward-Cleaned"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "html_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/fastqc/fastqc/0.52", 
+            "tool_state": "{\"__page__\": 0, \"contaminants\": \"null\", \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"QC-Forward-Cleaned\\\"\", \"input_file\": \"null\"}", 
+            "tool_version": "0.52", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "6": {
+            "annotation": "", 
+            "id": 6, 
+            "input_connections": {
+                "input_file": {
+                    "id": 4, 
+                    "output_name": "output_paired2"
+                }
+            }, 
+            "inputs": [], 
+            "name": "FastQC:Read QC", 
+            "outputs": [
+                {
+                    "name": "html_file", 
+                    "type": "html"
+                }
+            ], 
+            "position": {
+                "left": 994, 
+                "top": 618
+            }, 
+            "post_job_actions": {
+                "RenameDatasetActionhtml_file": {
+                    "action_arguments": {
+                        "newname": "QC-Reverse-Cleaned"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "html_file"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/fastqc/fastqc/0.52", 
+            "tool_state": "{\"__page__\": 0, \"contaminants\": \"null\", \"__rerun_remap_job_id__\": null, \"out_prefix\": \"\\\"QC-Reverse-Cleaned\\\"\", \"input_file\": \"null\"}", 
+            "tool_version": "0.52", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "7": {
+            "annotation": "", 
+            "id": 7, 
+            "input_connections": {
+                "inputs_0|is_separate|forwards_file": {
+                    "id": 4, 
+                    "output_name": "output_paired1"
+                }, 
+                "inputs_0|is_separate|reverse_file": {
+                    "id": 4, 
+                    "output_name": "output_paired2"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Velvet Optimiser", 
+            "outputs": [
+                {
+                    "name": "dummyout", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "dummyout2", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "contigs", 
+                    "type": "fasta"
+                }, 
+                {
+                    "name": "afgfile", 
+                    "type": "afg"
+                }, 
+                {
+                    "name": "stats", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "logfile", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "lastgraph", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 1009, 
+                "top": 819
+            }, 
+            "post_job_actions": {
+                "HideDatasetActiondummyout": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "dummyout"
+                }, 
+                "HideDatasetActiondummyout2": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "dummyout2"
+                }, 
+                "HideDatasetActionlastgraph": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "lastgraph"
+                }, 
+                "HideDatasetActionlogfile": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "logfile"
+                }, 
+                "RenameDatasetActioncontigs": {
+                    "action_arguments": {
+                        "newname": "DeNovo - Raw Data"
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "contigs"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "velvetoptimiser_vlsci_ufrc", 
+            "tool_state": "{\"inputs\": \"[{\\\"__index__\\\": 0, \\\"filetype\\\": \\\"shortPaired\\\", \\\"is_separate\\\": {\\\"reverse_file\\\": null, \\\"forwards_file\\\": null, \\\"__current_case__\\\": 1, \\\"separate\\\": \\\"True\\\"}, \\\"shortMP\\\": \\\"False\\\"}]\", \"end_kmer\": \"\\\"237\\\"\", \"verbose\": \"\\\"False\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"__job_resource\": \"{\\\"__job_resource__select\\\": \\\"no\\\", \\\"__current_case__\\\": 0}\", \"start_kmer\": \"\\\"19\\\"\", \"advanced\": \"{\\\"is_advanced\\\": \\\"False\\\", \\\"__current_case__\\\": 1}\", \"kmer_step\": \"\\\"2\\\"\", \"amosfile\": \"\\\"True\\\"\"}", 
+            "tool_version": "1.0.0", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "8": {
+            "annotation": "", 
+            "id": 8, 
+            "input_connections": {
+                "input_dataset": {
+                    "id": 7, 
+                    "output_name": "contigs"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Export dataset", 
+            "outputs": [
+                {
+                    "name": "output_info", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 1396, 
+                "top": 754
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_info": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_info"
+                }, 
+                "RenameDatasetActionoutput_info": {
+                    "action_arguments": {
+                        "newname": ""
+                    }, 
+                    "action_type": "RenameDatasetAction", 
+                    "output_name": "output_info"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "exportDataset", 
+            "tool_state": "{\"input_dataset\": \"null\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"output_file\": \"\\\"<<change this>>\\\"\"}", 
+            "tool_version": "0.0.1", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "9": {
+            "annotation": "", 
+            "id": 9, 
+            "input_connections": {
+                "input_dataset": {
+                    "id": 7, 
+                    "output_name": "afgfile"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Export dataset", 
+            "outputs": [
+                {
+                    "name": "output_info", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 1399, 
+                "top": 881.5
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_info": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_info"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "exportDataset", 
+            "tool_state": "{\"input_dataset\": \"null\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"output_file\": \"\\\"<<change this>>\\\"\"}", 
+            "tool_version": "0.0.1", 
+            "type": "tool", 
+            "user_outputs": []
+        }, 
+        "10": {
+            "annotation": "", 
+            "id": 10, 
+            "input_connections": {
+                "input_dataset": {
+                    "id": 7, 
+                    "output_name": "stats"
+                }
+            }, 
+            "inputs": [], 
+            "name": "Export dataset", 
+            "outputs": [
+                {
+                    "name": "output_info", 
+                    "type": "text"
+                }
+            ], 
+            "position": {
+                "left": 1401, 
+                "top": 1008.5
+            }, 
+            "post_job_actions": {
+                "HideDatasetActionoutput_info": {
+                    "action_arguments": {}, 
+                    "action_type": "HideDatasetAction", 
+                    "output_name": "output_info"
+                }
+            }, 
+            "tool_errors": null, 
+            "tool_id": "exportDataset", 
+            "tool_state": "{\"input_dataset\": \"null\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"output_file\": \"\\\"<<change this>>\\\"\"}", 
+            "tool_version": "0.0.1", 
+            "type": "tool", 
+            "user_outputs": []
+        }
+    }
+}
