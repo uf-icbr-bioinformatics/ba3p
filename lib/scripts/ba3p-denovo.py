@@ -92,15 +92,15 @@ for run in MSC.runs:
 
     in1 = os.path.basename(fastq1)
     in2 = os.path.basename(fastq2)
-    fqcdir1 = in1 + ".before.fqc/"
-    fqcdir2 = in2 + ".before.fqc/"
-    ACT.mkdir(fqcdir1)
-    ACT.mkdir(fqcdir2)
+    run['fqcdir1'] = ACT.setFileExt(in1, ".before.fqc", remove=[".fastq", ".gz"])
+    run['fqcdir2'] = ACT.setFileExt(in2, ".before.fqc", remove=[".fastq", ".gz"])
+    ACT.mkdir(run['fqcdir1'])
+    ACT.mkdir(run['fqcdir2'])
     run['sickle1'] = ACT.setFileExt(in1, ".sickle.fastq", remove=[".fastq", ".gz"])
     run['sickle2'] = ACT.setFileExt(in2, ".sickle.fastq", remove=[".fastq", ".gz"])
     this = ACT.submit("sickle.qsub {} {} {} {}".format(fastq1, fastq2, run['sickle1'], run['sickle2']), done="sickle.done")
-    fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, fqcdir1), done="fqc1.done")
-    fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, fqcdir2), done="fqc2.done")
+    fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, run['fqcdir1']), done="fqc1.done")
+    fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, run['fqcdir2']), done="fqc2.done")
 
 ACT.wait([('sickle.done', MSC.nruns), ('fqc1.done', MSC.nruns), ('fcq2.done', MSC.nruns)])
 
