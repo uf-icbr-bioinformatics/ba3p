@@ -1,0 +1,31 @@
+#!/bin/bash
+
+module load dibig_tools
+
+command=$1
+shift
+
+case "$command" in
+  help)
+	cmd=$1
+	if [ "$cmd" == "" ];
+	then
+	    echo "Please use \'help\' followed by a command name to get help on that command."
+	else
+	    $HPC_BA3P_DIR/lib/scripts/help-${cmd}.py
+	fi
+	exit
+	;;
+    snpcall)
+	script=ba3p-snpcall.py
+	;;
+esac
+
+if [ "$script" == "" ];
+then
+  echo Please specify which command to run\!
+  echo Currently available commands: help, snpcall
+else
+  actor.py -d $HPC_BA3P_DIR/lib/scripts/$script -Z $*
+fi
+
