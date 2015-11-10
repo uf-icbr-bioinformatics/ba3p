@@ -23,6 +23,9 @@ case "$command" in
     snpcall)
 	script=ba3p-snpcall.py
 	;;
+    denovo)
+	script=ba3p-denovo.py
+	;;
 esac
 
 if [ "$script" == "" ];
