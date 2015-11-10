@@ -105,10 +105,12 @@ for run in MSC.runs:
     this = ACT.submit("sickle.qsub {} {} {} {}".format(fastq1, fastq2, run['sickle1'], run['sickle2']), done="sickle.done")
     fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, run['fqcdir1']), done="fqc.done")
     fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, run['fqcdir2']), done="fqc.done")
-    fqc3 = ACT.submit("fastqc.qsub {} {}".format(run['sickle1'], run['fqcdir1a']), after=this, done="fqc.done")
-    fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), after=this, done="fqc.done")
+ACT.wait([('sickle.done', MSC.nruns), ('fqc.done', MSC.nruns * 2)])
 
-ACT.wait([('sickle.done', MSC.nruns), ('fqc.done', MSC.nruns * 4)])
+for run in MSC.runs:
+    fqc3 = ACT.submit("fastqc.qsub {} {}".format(run['sickle1'], run['fqcdir1a']), done="fqc2.done")
+    fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), done="fqc2.done")
+ACT.wait([('fqc2.done', MSC.nruns * 2)])
 
 #
 # Once all the bowties are done, we can collect stats (number of aligned reads),
