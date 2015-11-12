@@ -107,9 +107,9 @@ def doSwipt(G, records, alnlen):
             result = invokePhi(cmdline)
             pval = parsePhiResult(result)
             if pval == None:
-                out.write("{}\t{}\tN/A\n".format(p, q))
+                out.write("{}\t{}\tN/A\n".format(p+1, q))
             elif (not G.PVALTHR) or (pval <= G.PVALTHR):
-                out.write("{}\t{}\t{}\n".format(p, q, pval))
+                out.write("{}\t{}\t{}\n".format(p+1, q, pval))
     finally:
         if G.OUTFILE:
             out.close()
@@ -132,9 +132,9 @@ def doSwiptExtra(G, records, alnlen):
             pvals = parsePhiExtra(result)
             pval = pvals['phi']
             if pval == None:
-                out.write("{}\t{}\tN/A\t{}\t{}\n".format(p, q, pvals['nss'], pvals['chi']))
+                out.write("{}\t{}\tN/A\t{}\t{}\n".format(p+1, q, pvals['nss'], pvals['chi']))
             elif (not G.PVALTHR) or (pval <= G.PVALTHR):
-                out.write("{}\t{}\t{}\t{}\t{}\n".format(p, q, pval, pvals['nss'], pvals['chi']))
+                out.write("{}\t{}\t{}\t{}\t{}\n".format(p+1, q, pval, pvals['nss'], pvals['chi']))
     finally:
         if G.OUTFILE:
             out.close()

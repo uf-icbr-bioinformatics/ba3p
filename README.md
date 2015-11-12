@@ -136,6 +136,29 @@ fastq1=TESTRUN_S2_L001_R1.fastq.gz
 fastq1=TESTRUN_S2_L001_R2.fastq.gz
 ```
 
+## swipt.py
+**swipt.py** performs sliding-window analysis of recombination using the Phi test, as implemented by T. Bruen and D. Bryant (see the **Phi test** section in [this page](http://www.maths.otago.ac.nz/~dbryant/software.html)). Given a multiple sequence alignment in FASTA format as input, swipt applies the Phi test to a sliding subregion of the alignment, and reports the resulting P-value for each region to a tab-delimited file (or to standard output).
+
+### Syntax
+swipt.py is invoked as follows:
+```
+swipt.py [options] alignment.fa [outfile]
+```
+
+The following command-line options are available:
+
+Option  | Description
+--------|------------
+-p PATH | Set the path to the Phi executable
+-w W    | Set window size to W (default: 200)
+-s S    | Set window step to S (default: 40)
+-t T    | Set P-value threshold to T. If this option is specified, only regions with a Phi P-value below this limit will be reported in the output.
+-phip N | Set Phi permutations to N (Passed to Phi as the -p option)
+-phio   | Output extended Phi results (Passed to Phi as the -o option)
+
+### Output
+The output is a tab-delimited file containing either three or five columns. The first two columns contain the start and end position of each region, while the third column contains the P-value from the Phi test. If *-phio* is specified (corresponding to the -o option in the Phi program), the fourth column will contain the P-value from the *NSS* test, and the fifth column will contain the P-value from the *Max Chi<sup>2</sup>* test. Please note that the P-value threshold specified with the -t option only applies to the Phi test result (third column).
+
 ## VCFmerger.py
 **VCFmerger.py** is a program to combine multiple VCF files (each one possibly containing data for one or more samples) into pseudo-FASTA files. A pseudo-fasta file is a FASTA file containing multiple sequences, one for each sample, and each sequence is composed of the nucleotides found in variant positions only. For example, if the input to VCFmerger consists of three VCF files (containing a single sample each) with 10 variant positions in total, the output file will be a pseudo-FASTA file containing three sequences of 10nt each.
 
