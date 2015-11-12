@@ -7,10 +7,10 @@
 
 In addition, this package provides a few utilities that are used by ba3p tools, but can also be used independently if desired:
 
-- [swipt.py](#user-content-swipt.py)
-- VCFmerger.py
-- sam-remap.py
-- vcf-remap.py
+- [swipt.py](#user-content-swiptpy)
+- [VCFmerger.py](#user-content-vcfmergerpy)
+- [sam-remap.py](#user-content-samremap.py)
+- [vcf-remap.py](#user-content-vcfremap.py)
 
 ### Requirements
 Ba3p is designed to run in an HPC environment, and requires the **submit** and **actor** packages.  Please contact the author for details.
