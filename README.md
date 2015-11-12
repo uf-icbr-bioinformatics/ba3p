@@ -7,6 +7,7 @@
 
 In addition, this package provides a few utilities that are used by ba3p tools, but can also be used independently if desired:
 
+- swipt.py
 - VCFmerger.py
 - sam-remap.py
 - vcf-remap.py
