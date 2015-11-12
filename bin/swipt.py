@@ -14,14 +14,14 @@ from Bio import SeqIO
 # Globals
 
 class Globals():
-    PHI = "./Phi"                   # -p
-    PHIPERM = False                 # -phip
-    PHIEXTRA = False                # -phio
-    WINSIZE = 200                   # -w
-    WINSTEP = 40                    # -s
-    PVALTHR = False                 # -t
+    PHI = "/apps/dibig_ba3p/1.0/bin/Phi"   # -p
+    PHIPERM = False                        # -phip
+    PHIEXTRA = False                       # -phio
+    WINSIZE = 200                          # -w
+    WINSTEP = 40                           # -s
+    PVALTHR = False                        # -t
     INFILE = False
-    OUTFILE = False                 # -o
+    OUTFILE = False                        # -o
 
 # Utils
 
