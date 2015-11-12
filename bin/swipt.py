@@ -94,6 +94,10 @@ def writeWindowedSequences(filename, records, start=0, end=10):
 def doSwipt(G, records, alnlen):
     tmp = tmpfile()
     cmdline = [G.PHI, "-f", tmp]
+    if G.PHIPERM:
+        cmdline += ["-p", G.PHIPERM]
+#    print "Executing: ",
+#    print cmdline
     end = alnlen - G.WINSIZE
     out = sys.stdout
     if G.OUTFILE:
@@ -105,6 +109,9 @@ def doSwipt(G, records, alnlen):
             q = p+G.WINSIZE
             writeWindowedSequences(tmp, records, p, q)
             result = invokePhi(cmdline)
+            if not result:
+                sys.stderr.write("Error: could not execute '{}'. Please check its location and provide the correct path using the -p option.\n".format(G.PHI))
+                return
             pval = parsePhiResult(result)
             if pval == None:
                 out.write("{}\t{}\tN/A\n".format(p+1, q))
@@ -118,6 +125,10 @@ def doSwipt(G, records, alnlen):
 def doSwiptExtra(G, records, alnlen):
     tmp = tmpfile()
     cmdline = [G.PHI, "-o", "-f", tmp]
+    if G.PHIPERM:
+        cmdline += ["-p", G.PHIPERM]
+#    print "Executing: ",
+#    print cmdline
     end = alnlen - G.WINSIZE
     out = sys.stdout
     if G.OUTFILE:
@@ -129,6 +140,9 @@ def doSwiptExtra(G, records, alnlen):
             q = p+G.WINSIZE
             writeWindowedSequences(tmp, records, p, q)
             result = invokePhi(cmdline)
+            if not result:
+                sys.stderr.write("Error: could not execute '{}'. Please check its location and provide the correct path using the -p option.\n".format(G.PHI))
+                return
             pvals = parsePhiExtra(result)
             pval = pvals['phi']
             if pval == None:
@@ -176,7 +190,7 @@ def parseArguments(G, args):
             G.PVALTHR = float(a)
             next = ""
         elif next == "-phip":
-            G.PHIPERM = int(a)
+            G.PHIPERM = a       # No point in converting to int
             next = ""
         elif a in ["-p", "-w", "-s", "-t", "-phip"]:
             next = a
