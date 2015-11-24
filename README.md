@@ -136,6 +136,66 @@ fastq1=TESTRUN_S2_L001_R1.fastq.gz
 fastq1=TESTRUN_S2_L001_R2.fastq.gz
 ```
 
+## Denovo
+
+The **denovo** tool performs the following processing steps on one or more pairs of (paired-end) FASTQ files:
+
+- Quality control on raw reads using **FastQC**;
+- Trimming of raw reads using **sickle**;
+- Quality control on trimmed reads using **FastQC**;
+- Optimized de-novo assembly of trimmed reads using **VelvetOptimizer**.
+
+### Setup
+The denovo tool assumes you have the following files:
+
+- Two (paired-end) fastq files for each run. The fastq files may be compressed 
+  with gzip. [Note: single-end support is coming soon]
+
+### Configuration
+Denovo requires a configuration file listing the parameters
+of the desired analysis. The configuration file is a plain-text file divided
+into sections. Each section starts with a label surrounded by [ ], and contains
+assignments of values to variables in the form: variable = value.
+
+The first section must be called **[General]**, and must contain the following
+variables:
+
+```conf
+title = (name of your analysis)
+samples = (names of samples separated by commas).
+```
+The remainder of the configuration file is composed of one section
+for each sample, labeled with its name. For example, if you defined:
+
+```conf
+samples = smpl1,smpl2
+```
+
+the corresponding sections should be labeled **[smpl1]**, **[smpl2]**.
+
+Each section should indicate the name of the two paired-end fastq files:
+```conf
+fastq1 = (file with left-side reads)
+fastq2 = (file with righ-side reads)
+```
+Please note that all pathnames should be either absolute (ie, starting
+with a /) or relative to the directory you are calling the script from.
+
+### Output
+When denovo starts it will create a directory with the 
+name indicated by the 'title' variable, and will write all its output 
+files to that directory.
+
+At the end, the tool will create a zip file with the contents of the
+output directory, excluding temporary files and other unnecessary files.
+The zip file will also include an HTML file (called **index.html**) containing
+a full report of the analysis that was performed, and links to all output
+files.
+
+The easiest way to access the pipeline results is to download the zip file 
+to your computer and uncompress it, then open the index.html file with 
+any web browser.
+
 ## swipt.py
 **swipt.py** performs sliding-window analysis of recombination using the Phi test, as implemented by T. Bruen and D. Bryant (see the **Phi test** section in [this page](http://www.maths.otago.ac.nz/~dbryant/software.html)). Given a multiple sequence alignment in FASTA format as input, swipt applies the Phi test to a sliding subregion of the alignment, and reports the resulting P-value for each region to a tab-delimited file (or to standard output).
 
