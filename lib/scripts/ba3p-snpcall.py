@@ -32,6 +32,7 @@ class ba3pMSC():
     snpeffdb = None             # For snpEff annotations
 
     def __init__(self, ACT):
+        global message
         conffile = ACT.Arguments[0]
         conf = ACT.loadConfiguration(conffile)
         self.title = ACT.getConf("title")
@@ -39,6 +40,13 @@ class ba3pMSC():
         self.genome = ACT.getConf("genome")
         self.mapfile = ACT.getConf("mapfile")
         self.snpeffdb = ACT.getConf("snpeffdb")
+
+        if ACT.missingOrStale(self.genome, warn=True):
+            valid = False
+        if ACT.missingOrStale(self.reference + ".1.bt2", warn=True):
+            valid = False
+        if self.mapfile and ACT.missingOrStale(self.mapfile, warn=True):
+            valid = False
 
         runnames = ACT.getConf("samples").split(",")
         runnames = [ s.strip() for s in runnames ]
@@ -48,11 +56,11 @@ class ba3pMSC():
                    'fastq1': ACT.getConf("fastq1", name),
                    'fastq2': ACT.getConf("fastq2", name)}
 
-            if run['fastq1'] == None:
-                myutils.message("Configuration error: `fastq1' undefined for sample `{}'".format(name))
+            if run['fastq1'] == None or ACT.missingOrStale(run['fastq1']):
+                message("Configuration error: `fastq1' undefined for sample `{}'".format(name))
                 valid = False
-            if run['fastq2'] == None:
-                myutils.message("Configuration error: `fastq2' undefined for sample `{}'".format(name))
+            if run['fastq2'] == None or ACT.missingOrStale(run['fastq2']):
+                message("Configuration error: `fastq2' undefined for sample `{}'".format(name))
                 valid = False
 
             self.runs.append(run)
@@ -110,11 +118,11 @@ if MSC.mapfile != None:
 fai = MSC.reference + ".fai" 
 refdict = ACT.setFileExt(MSC.reference, ".dict")
 
-if not os.path.isfile(fai):
-    print "Reference index {} does not exist, creating it.".format(fai)
+if ACT.missingOrStale(fai, MSC.reference):
+    print "Reference index {} does not exist or is out of date, creating it.".format(fai)
     ACT.shell("module load samtools; samtools faidx {}", MSC.reference)
 
-if not os.path.isfile(refdict):
+if ACT.missingOrStale(refdict, MSC.reference):
     print "Reference dictionary {} does not exist, creating it.".format(refdict)
     ACT.submit("picard.qsub CreateSequenceDictionary R={} O={}".format(MSC.reference, refdict), done="dict.done")
     ACT.wait("dict.done")
