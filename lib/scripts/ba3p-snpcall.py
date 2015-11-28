@@ -146,8 +146,8 @@ for run in MSC.runs:
     run['bamfile'] = run['name'] + ".bam"
     this = ACT.submit("sickle.qsub {} {} {} {}".format(fastq1, fastq2, run['sickle1'], run['sickle2']))
      # print "Submitted: " + this
-    ACT.submit("bowtie2-pe.qsub {} {} {} {}".format(MSC.genome, run['sickle1'], run['sickle2'], run['bamfile']), done="bowtie2.done", after=this)
-ACT.wait(('bowtie2.done', MSC.nruns))
+    ACT.submit("bowtie2-pe.qsub {} {} {} {}".format(MSC.genome, run['sickle1'], run['sickle2'], run['bamfile']), done="bowtie2.@.done", after=this)
+ACT.wait(('bowtie2.@.done', MSC.nruns))
 
 #
 # Once all the bowties are done, we can collect stats (number of aligned reads),
@@ -181,9 +181,9 @@ for run in MSC.runs:
 # And now the main star...
 
     run['vcf'] = name + ".vcf"
-    ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), after=job, done="freebayes.done")
+    ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), after=job, done="freebayes.@.done")
 
-ACT.wait(("freebayes.done", MSC.nruns))
+ACT.wait(("freebayes.@.done", MSC.nruns))
 
 # Let's collect some stats
 for run in MSC.runs:
@@ -224,8 +224,8 @@ if MSC.snpeffdb != None:
         run['snpeff'] = name + ".snpeff.vcf"
         run['csvreport'] = name + "/" + name + ".csv"
         run['htmlreport'] = name + "/" + name + ".html"
-        ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, run['snpeff'], MSC.snpeffdb, run['csvreport'], run['htmlreport']), done="snpeff.done")
-ACT.wait(("snpeff.done", MSC.nruns))
+        ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, run['snpeff'], MSC.snpeffdb, run['csvreport'], run['htmlreport']), done="snpeff.@.done")
+ACT.wait(("snpeff.@.done", MSC.nruns))
 
 lastscene = 4
 if MSC.snpeffdb != None:
