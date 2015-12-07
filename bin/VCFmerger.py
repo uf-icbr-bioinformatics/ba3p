@@ -422,50 +422,59 @@ class VCFmerger():
         return filenames
 
     def writeFastaFiles(self, parser): # parser is a VCFparser object
-        for chrom in parser.chromosomes:
-            outfile = self.outpattern.format(chrom)
-            print "Writing output file {}...".format(outfile)
-            with open(outfile, "w") as f:
-                for idx in range(parser.nfiles):
-                    f.write(">{}\n".format(parser.files[idx].samples[0]))
-                    snplist = parser.snps[chrom]
-                    positions = sorted(snplist)
-                    for p in positions:
-                        v = snplist[p]
-                        ref = v.reference
-                        alt = v.alternate
-                        gt = v.genotypes[idx]
+        op = self.outpattern
+        if op.find("{") >= 0:
+            for chrom in parser.chromosomes:
+                outfile = op.format(chrom)
+                print "Writing output file {}...".format(outfile)
+                with open(outfile, "w") as f:
+                    self.writeOneChrom(parser, chrom, f)
+        else:
+            with open(op, "w") as f:
+                for chrom in parser.chromosomes:
+                    self.writeOneChrom(parser, chrom, f)
 
-                        if gt == 0:
-                            if self.missingChar:
-                                a = self.missingChar
-                            else:
-                                a = ref
-                            if self.bothAlleles:
-                                c = a + a
-                            else:
-                                c = a
+    def writeOneChrom(self, parser, chrom, f):
+        for idx in range(parser.nfiles):
+            f.write(">{}\n".format(parser.files[idx].samples[0]))
+            snplist = parser.snps[chrom]
+            positions = sorted(snplist)
+            for p in positions:
+                v = snplist[p]
+                ref = v.reference
+                alt = v.alternate
+                gt = v.genotypes[idx]
 
-                        elif gt == 1:
-                            if self.bothAlleles:
-                                c = ref + ref
-                            else:
-                                c = ref
+                if gt == 0:
+                    if self.missingChar:
+                        a = self.missingChar
+                    else:
+                        a = ref
+                    if self.bothAlleles:
+                        c = a + a
+                    else:
+                        c = a
 
-                        elif gt == 2:
-                            if self.bothAlleles:
-                                c = ref + al
-                            else:
-                                c = alt
+                elif gt == 1:
+                    if self.bothAlleles:
+                        c = ref + ref
+                    else:
+                        c = ref
 
-                        elif gt == 3:
-                            if self.bothAlleles:
-                                c = alt + alt
-                            else:
-                                c = alt
+                elif gt == 2:
+                    if self.bothAlleles:
+                        c = ref + al
+                    else:
+                        c = alt
 
-                        f.write(c)
-                    f.write("\n")
+                elif gt == 3:
+                    if self.bothAlleles:
+                        c = alt + alt
+                    else:
+                        c = alt
+
+                f.write(c)
+            f.write("\n")
 
     def dumpSNPs(self, parser):
         filename = self.snpsfile
@@ -510,9 +519,9 @@ def usage():
 Options:
   -m|--missingChar C         Use character C to represent unknown alleles (otherwise
                              reference allele will be used).
-  -o|--outPattern P          Use string P as the name of the output file(s). If P 
-                             contains the sequence {}, it will be replaced by each
-                             chromosome name.
+  -o|--outPattern P          Use string P as the name of the output file(s). If P contains
+                             the sequence {}, it will be replaced by each chromosome
+                             name, otherwise output will be written to a single file.
   -b|--bothAlleles           If specified, the program will print two bases for each
                              SNP, according to the genotype (AA, AB, or BB).
   -r|--removeMissing         If specified, the program will only print SNPs that 
