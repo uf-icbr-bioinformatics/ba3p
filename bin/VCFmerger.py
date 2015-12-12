@@ -165,6 +165,7 @@ class VCFparser:
     filenames = []
     files = []
     nfiles = 0
+    nsamples = 0                # Total number of samples
     qual = 30
     qualHow = "d"               # quality set by default
 
@@ -177,6 +178,8 @@ class VCFparser:
             self.qual = qual
             self.qualHow = "a"  # quality was set through command-line argument
         self.files = [ VCFfile(f) for f in filenames ]
+        for vf in self.files:
+            self.nsamples += vf.nsamples
 
     def parseQualFromVCF(self, line):
         """If QUALFIELD is present in `line', extract the quality value that
@@ -203,14 +206,15 @@ the VCF file."""
         idx = 0
         for f in self.files:
             print "Parsing {}...".format(f.filename)
-            self.parseOneVCF(f.filename, idx)
-            idx += 1
+            self.parseOneVCF(f, idx)
+            idx += f.nsamples
 
-    def parseOneVCF(self, filename, idx):
+    def parseOneVCF(self, vf, idx):
+        """Parse SNP information from VCFfile `vf', storing its genotypes starting at position `idx' in the output vector."""
         inHeader = True
         thisChrom = ""          # Current chromosome
         thisSNPs = None         # List of SNPs for current chromosome
-        with open(filename, "r") as f:
+        with open(vf.filename, "r") as f:
             for line in f:
                 if len(line) > 0:                                             # skip empty lines (there should not be any)
                     if inHeader:
@@ -243,7 +247,7 @@ the VCF file."""
                                 pos = int(line[1])
                                 ref = line[3].strip()
                                 snp = line[4].strip()
-                                dat  = line[9]
+                                alldata  = line[9:] # Columns containing genotypes
 
                                 if len(ref) == 1 and len(snp) == 1:              # only consider SNPs
                                     if not chrom == thisChrom:                   # new chromosome?
@@ -259,7 +263,7 @@ the VCF file."""
                                     if pos in thisSNPs:                          # do we already have a SNP in this position?
                                         s = thisSNPs[pos]
                                     else:
-                                        s = VCFSNP(pos, self.nfiles)
+                                        s = VCFSNP(pos, self.nsamples)
                                         # print "Adding {} to {}.".format(s, self.snps)
                                         s.reference = ref
                                         s.alternate = snp
@@ -267,12 +271,15 @@ the VCF file."""
                                         # *** put check for -i and -a here!
                                         self.snps[thisChrom][pos] = s
 
-                                    s.nseen += 1
-                                    gt = dat.split(":")[0]
-                                    gt1 = int(gt[0])
-                                    gt2 = int(gt[2])
-                                    # print "{}: {} + {} = {}".format(pos, gt1, gt2, gt1+gt2)
-                                    s.genotypes[idx] = gt1 + gt2 + 1    # 1=ref hom, 2=het, 3=alt hom
+                                    for i in range(vf.nsamples):
+                                        dat = alldata[i]
+                                        if dat.find(":") > 0:
+                                            s.nseen += 1
+                                            gt = dat.split(":")[0]
+                                            gt1 = int(gt[0])
+                                            gt2 = int(gt[2])
+                                            # print "{}: {} + {} = {}".format(pos, gt1, gt2, gt1+gt2)
+                                            s.genotypes[idx + i] = gt1 + gt2 + 1    # 1=ref hom, 2=het, 3=alt hom
 
     def summarize(self):
         print "Chromosomes: {}".format(", ".join(self.chromosomes))
@@ -282,7 +289,7 @@ the VCF file."""
 
     def filterSNPs(self):
         """Remove SNPs that were not seen in all files."""
-        wanted = self.nfiles
+        wanted = self.nsamples
         for chrom in self.chromosomes:
             new = {}
             for (pos, v) in self.snps[chrom].iteritems():
@@ -435,46 +442,49 @@ class VCFmerger():
                     self.writeOneChrom(parser, chrom, f)
 
     def writeOneChrom(self, parser, chrom, f):
-        for idx in range(parser.nfiles):
-            f.write(">{}\n".format(parser.files[idx].samples[0]))
-            snplist = parser.snps[chrom]
-            positions = sorted(snplist)
-            for p in positions:
-                v = snplist[p]
-                ref = v.reference
-                alt = v.alternate
-                gt = v.genotypes[idx]
+        idx = 0
+        snplist = parser.snps[chrom]
+        positions = sorted(snplist)
+        for vf in parser.files:                             # Go through all files
+            for i in range(vf.nsamples):                    # And all samples in each file. i is index of sample in file.
+                f.write(">{}\n".format(vf.samples[i]))      # Write sample name
+                for p in positions:                         # Loop through all positions
+                    v = snplist[p]
+                    ref = v.reference
+                    alt = v.alternate
+                    gt = v.genotypes[idx]
 
-                if gt == 0:
-                    if self.missingChar:
-                        a = self.missingChar
-                    else:
-                        a = ref
-                    if self.bothAlleles:
-                        c = a + a
-                    else:
-                        c = a
+                    if gt == 0:
+                        if self.missingChar:
+                            a = self.missingChar
+                        else:
+                            a = ref
+                        if self.bothAlleles:
+                            c = a + a
+                        else:
+                            c = a
 
-                elif gt == 1:
-                    if self.bothAlleles:
-                        c = ref + ref
-                    else:
-                        c = ref
+                    elif gt == 1:
+                        if self.bothAlleles:
+                            c = ref + ref
+                        else:
+                            c = ref
 
-                elif gt == 2:
-                    if self.bothAlleles:
-                        c = ref + al
-                    else:
-                        c = alt
+                    elif gt == 2:
+                        if self.bothAlleles:
+                            c = ref + al
+                        else:
+                            c = alt
 
-                elif gt == 3:
-                    if self.bothAlleles:
-                        c = alt + alt
-                    else:
-                        c = alt
+                    elif gt == 3:
+                        if self.bothAlleles:
+                            c = alt + alt
+                        else:
+                            c = alt
 
-                f.write(c)
-            f.write("\n")
+                    f.write(c)
+                f.write("\n")
+            idx += 1
 
     def dumpSNPs(self, parser):
         filename = self.snpsfile
