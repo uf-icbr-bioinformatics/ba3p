@@ -40,6 +40,14 @@ class ba3pMSC():
         self.genome = ACT.getConf("genome")
         self.mapfile = ACT.getConf("mapfile")
         self.snpeffdb = ACT.getConf("snpeffdb")
+        self.singleVCF = ACT.getConf("singleVCF")
+
+        # For singleVCF mode
+        self.vcfsnps = None
+        self.seVCF = None
+        self.snpeffVCF = None
+        self.csvreport = None
+        self.htmlreport = None
 
         if ACT.missingOrStale(self.genome, warn=True):
             valid = False
@@ -131,7 +139,7 @@ if ACT.missingOrStale(refdict, MSC.reference):
 ACT.shell("rm -f *.done")
 
 #
-# First of all run sickle on fastq files
+# First of all run sickle and bowtie on fastq files
 #
 
 for run in MSC.runs:
@@ -163,32 +171,45 @@ for run in MSC.runs:
     run['alignedReads'] = ACT.shell("module load bamtools; bamtools count -in {}".format(bamfile))
     
     run['picard'] = ACT.setFileExt(bamfile, ".picard.bam")
-    job = ACT.submit("picard.qsub AddOrReplaceReadGroups I={} O={} RGID=ID_{} RGLB=LB_{} RGPL=ILLUMINA RGPU=PU_{} RGSM=SM_{}".format(bamfile, run['picard'], name, name, name, name))
+    job1 = ACT.submit("picard.qsub AddOrReplaceReadGroups I={} O={} RGID=ID_{} RGLB=LB_{} RGPL=ILLUMINA RGPU=PU_{} RGSM=SM_{}".format(bamfile, run['picard'], name, name, name, name))
 
     run['dupmark'] = ACT.setFileExt(bamfile, ".dupmark.bam")
     run['metrics'] = name + ".metrics.txt"
-    job = ACT.submit("picard.qsub MarkDuplicates I={} O={} M={} REMOVE_DUPLICATES=true ASSUME_SORTED=true".format(run['picard'], run['dupmark'], run['metrics']), 
-                     after=job)
+    job2 = ACT.submit("picard.qsub MarkDuplicates I={} O={} M={} REMOVE_DUPLICATES=true ASSUME_SORTED=true".format(run['picard'], run['dupmark'], run['metrics']), 
+                     after=job1)
 
     run['realigned'] = name + ".realigned.bam"
-    job = ACT.submit("gatk-realigner.qsub {} {} {}".format(MSC.reference, run['dupmark'], run['realigned']), after=job)
+    job3 = ACT.submit("gatk-realigner.qsub {} {} {}".format(MSC.reference, run['dupmark'], run['realigned']), after=job2)
 
 # Fix mates
 
     run['fixmates'] = name + ".fixmates.bam"
-    job = ACT.submit("picard.qsub FixMateInformation I={} O={} SORT_ORDER=coordinate".format(run['realigned'], run['fixmates']), after=job)
+    ACT.submit("picard.qsub FixMateInformation I={} O={} SORT_ORDER=coordinate".format(run['realigned'], run['fixmates']), after=job3, done="picard.@.done")
+ACT.wait(("picard.@.done", MSC.nruns))
 
 # And now the main star...
 
-    run['vcf'] = name + ".vcf"
-    ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), after=job, done="freebayes.@.done")
-
-ACT.wait(("freebayes.@.done", MSC.nruns))
+if MSC.singleVCF:
+    # Start a single freebayes run for all samples
+    bamfiles = ",".join([ run['fixmates'] for run in MSC.runs ])
+    MSC.singleVCF = "all.vcf"
+    ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, bamfiles, MSC.singleVCF), done="freebayes.done")
+    ACT.wait("freebayes.done")
+else:
+    # Start a separate freebayes run for each sample
+    for run in MSC.runs:
+        run['vcf'] = name + ".vcf"
+        ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), done="freebayes.@.done")
+    ACT.wait(("freebayes.@.done", MSC.nruns))
 
 # Let's collect some stats
 for run in MSC.runs:
     run['fixedReads'] = ACT.shell("module load bamtools; bamtools count -in {}".format(run['fixmates']))
-    run['vcfsnps'] = ACT.shell("grep -c -v ^\# {}".format(run['vcf']))
+    if not MSC.singleVCF:
+        run['vcfsnps'] = ACT.shell("grep -c -v ^\# {}".format(run['vcf']))
+
+if MSC.singleVCF:
+    MSC.vcfsnps = ACT.shell("grep -c -v ^\# {}".format(MSC.singleVCF))
 
 ACT.scene(2, "Alignment")
 ACT.reportf("""Reads were aligned to the reference genome using <b>bowtie2</b>, after trimming with <b>sickle</b>.
@@ -199,43 +220,70 @@ ACT.table([ ["<a href='{}'>{}</a>".format(run['fixmates'], run['name']), run['al
           header=['Sample', 'Aligned reads', 'Post-GATK reads'], align="HRR")
 
 ACT.scene(3, "SNP calling")
-ACT.reportf("""SNPs were called using <b>freebayes</b>. The following table shows the number of SNPs
+if MSC.singleVCF:
+    ACT.reportf("""SNPs were called using <b>freebayes</b> in single-VCF mode (all BAM files were combined
+together for this step. A total of {} SNPs were identified. The VCF file can be downloaded using the link below.""", MSC.vcfsnps)
+    ACT.file(MSC.singleVCF, description="VCF file containing all identified SNPs.")
+else:
+    ACT.reportf("""SNPs were called using <b>freebayes</b>. The following table shows the number of SNPs
 identified in each sample. Each sample name is linked to the corresponding VCF file.""")
-ACT.table([ ["<a href='{}'>{}</a>".format(r['vcf'], r['name']), r['vcfsnps'] ] for r in MSC.runs],
-          header=['Sample', 'SNPs'], align='HR')
+    ACT.table([ ["<a href='{}'>{}</a>".format(r['vcf'], r['name']), r['vcfsnps'] ] for r in MSC.runs],
+              header=['Sample', 'SNPs'], align='HR')
 
 #
 # If requested, call snpEff
 #
 
 if MSC.snpeffdb != None:
-    for run in MSC.runs:
-        name = run['name']
-        vcf = run['vcf']
-        snpeffIn = vcf
-
+    if MSC.singleVCF:
+        snpeffIn = MSC.singleVCF
         # Rename chromosomes if requested
         if MSC.mapfile != None:
-            run['vcfse'] = vcfse = name + ".se.vcf"
-            snpeffIn = vcfse
-            ACT.shell("module load dibig_ba3p; vcf-remap.py {} < {} > {}".format(MSC.mapfile,  vcf, vcfse))
+            MSC.seVCF = "all.se.vcf"
+            snpeffIn = MSC.seVCF
+            ACT.shell("module load dibig_ba3p; vcf-remap.py {} < {} > {}".format(MSC.mapfile,  MSC.singleVCF, MSC.seVCF))
+        ACT.mkdir("allsnps")
+        MSC.snpeffVCF = "all.snpeff.vcf"
+        MSC.csvreport = "allsnps/allsnps.csv"
+        MSC.htmlreport = "allsnps/allsnps.html"
+        ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, MSC.snpeffVCF, MSC.snpeffdb, MSC.csvreport, MSC.htmlreport), done="snpeff.done")
+        ACT.wait("snpeff.done")
+    else:
+
+        # One VCF run per sample
+        for run in MSC.runs:
+            name = run['name']
+            vcf = run['vcf']
+            snpeffIn = vcf
+            # Rename chromosomes if requested
+            if MSC.mapfile != None:
+                run['vcfse'] = vcfse = name + ".se.vcf"
+                snpeffIn = vcfse
+                ACT.shell("module load dibig_ba3p; vcf-remap.py {} < {} > {}".format(MSC.mapfile,  vcf, vcfse))
             
-        ACT.mkdir(name)
-        run['snpeff'] = name + ".snpeff.vcf"
-        run['csvreport'] = name + "/" + name + ".csv"
-        run['htmlreport'] = name + "/" + name + ".html"
-        ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, run['snpeff'], MSC.snpeffdb, run['csvreport'], run['htmlreport']), done="snpeff.@.done")
-ACT.wait(("snpeff.@.done", MSC.nruns))
+            ACT.mkdir(name)
+            run['snpeff'] = name + ".snpeff.vcf"
+            run['csvreport'] = name + "/" + name + ".csv"
+            run['htmlreport'] = name + "/" + name + ".html"
+            ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, run['snpeff'], MSC.snpeffdb, run['csvreport'], run['htmlreport']), done="snpeff.@.done")
+        ACT.wait(("snpeff.@.done", MSC.nruns))
 
 lastscene = 4
 if MSC.snpeffdb != None:
     lastscene = 5
     ACT.scene(4, "SNP functional annotation")
-    ACT.reportf("""SNPs were annotated through <b>snpEff</b> using the <b>{}</b> database. The following table provides links to the annotated VCF file
+    if MSC.singleVCF:
+        ACT.reportf("""SNPs were annotated <b>snpEff</b> using the <b>{}</b> database. The following table provides links to the annotated VCF file
+and to the snpEff reports (in CSV and HTML formats).""".format(MSC.snpeffdb))
+        ACT.table([[linkify(MSC.snpeffVCF), linkify(MSC.csvreport), linkify(MSC.htmlreport)]],
+                  header=['VCF', 'CSV report', 'HTML report'],
+                  align="LLL")
+    else:
+        ACT.reportf("""SNPs were annotated through <b>snpEff</b> using the <b>{}</b> database. The following table provides links to the annotated VCF file
 and to the snpEff reports (in CSV and HTML formats) for each sample.""".format(MSC.snpeffdb))
-    ACT.table([ [r['name'], linkify(r['snpeff']), linkify(r['csvreport']), linkify(r['htmlreport']) ] for r in MSC.runs],
-              header=['Sample', 'VCF', 'CSV report', 'HTML report'],
-              align="HLLL")
+        ACT.table([ [r['name'], linkify(r['snpeff']), linkify(r['csvreport']), linkify(r['htmlreport']) ] for r in MSC.runs],
+                  header=['Sample', 'VCF', 'CSV report', 'HTML report'],
+                  align="HLLL")
 
 #
 # Finally combine all VCFs
@@ -244,13 +292,19 @@ and to the snpEff reports (in CSV and HTML formats) for each sample.""".format(M
 allvcfs = ""
 report = "merged-snps.csv"
 
-for run in MSC.runs:
-    if 'vcfse' in run:
-        allvcfs = allvcfs + run['vcfse'] + " "
+if MSC.singleVCF:
+    if MSC.snpeffdb == None:
+        invcf = MSC.singleVCF
     else:
-        allvcfs = allvcfs + run['vcf'] + " "
-
-ACT.shell("module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, allvcfs))
+        invcf = MSC.snpeffVCF
+    ACT.shell("module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, invcf))
+else:
+    for run in MSC.runs:
+        if 'vcfse' in run:
+            allvcfs = allvcfs + run['vcfse'] + " "
+        else:
+            allvcfs = allvcfs + run['vcf'] + " "
+    ACT.shell("module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, allvcfs))
 
 ACT.scene(lastscene, "Combined SNP files")
 ACT.reportf("""The VCF files for all samples were combined into a set of multi-fasta files (one for each chromosome).
