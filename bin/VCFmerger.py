@@ -115,17 +115,35 @@ class VCFSNP:
         self.genotypes = [ 0 for i in range(nfiles) ]
 
     def findHighestImpact(self):
+        nimp = 0
+
+        if self.snpeff != None:
+            for ann in self.snpeff.annots:
+                # print ann.impact
+                thisn = IMPACTS[ann.impact]
+                if thisn > nimp:
+                    nimp = thisn
+        return nimp
+
+    def findHighestImpactString(self):
         imp = ""
         nimp = 0
 
         if self.snpeff != None:
             for ann in self.snpeff.annots:
+                # print ann.impact
                 thisn = IMPACTS[ann.impact]
                 if thisn > nimp:
-                    nimp = thisn
                     imp = ann.impact
+                    nimp = thisn
         return imp
-            
+
+    def impactLessThan(self, wanted):
+        """Returns True if the highest impact of this SNP is less than `wanted'."""
+        nimp = self.findHighestImpact()
+        # print "Comparing {} with {}.".format(nimp, wanted)
+        return (nimp < wanted)
+
 class VCFfile:
     filename = None
     samples = []
@@ -268,8 +286,8 @@ the VCF file."""
                                         s.reference = ref
                                         s.alternate = snp
                                         s.snpeff = self.extractSnpEff(line[7])
-                                        # *** put check for -i and -a here!
                                         self.snps[thisChrom][pos] = s
+
 
                                     for i in range(vf.nsamples):
                                         dat = alldata[i]
@@ -287,15 +305,28 @@ the VCF file."""
         for chrom in self.chromosomes:
             print "  {}  {}".format(chrom, len(self.snps[chrom]))
 
-    def filterSNPs(self):
-        """Remove SNPs that were not seen in all files."""
+    def filterSNPs(self, missing=False, impact=False):
+        """Remove SNPs that were not seen in all files (if `missing' is True) or that have a highest impact less than `impact'."""
+        removedMissing = 0
+        removedImpact = 0
         wanted = self.nsamples
         for chrom in self.chromosomes:
             new = {}
             for (pos, v) in self.snps[chrom].iteritems():
-                if v.nseen == wanted:
+                keep = True
+                if missing and v.nseen < wanted:
+                    removedMissing += 1
+                    keep = False
+                if impact and v.impactLessThan(impact):
+                    removedImpact += 1
+                    keep = False
+                if keep:
                     new[pos] = v
             self.snps[chrom] = new
+        if removedMissing > 0:
+            print "{} SNPs removed because of missing genotypes.".format(removedMissing)
+        if removedImpact > 0:
+            print "{} SNPs removed because of low impact.".format(removedImpact)
 
 #
 # Parsing of snpEff annotations
@@ -354,8 +385,8 @@ class VCFmerger():
     missingChar = False         # If set to a character, missing SNPs will be indicated by this character instead of reference
     removeMissing = False       # If true, SNPs will be printed only if they have alleles in all samples
     quality = None
-    impact = None
-    nimpact = 0
+    impact = None               # Desired minimum impact
+    nimpact = False             # Numeric value of desired minimum impact
     annotations = []
     snpsfile = None
     reportfile = None
@@ -498,7 +529,7 @@ class VCFmerger():
                         v = snplist[p]
                         ref = v.reference
                         alt = v.alternate
-                        out.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(chrom, p, ref, alt, v.nseen, v.findHighestImpact()))
+                        out.write("{}\t{}\t{}\t{}\t{}\t{}\n".format(chrom, p, ref, alt, v.nseen, v.findHighestImpactString()))
 
     def writeReport(self, parser):
         filename = self.reportfile
@@ -514,9 +545,8 @@ def main(args):
     files = m.parseOptions(sys.argv[1:])
     p = VCFparser(files, qual=m.quality)
     p.parseAllVCF()
+    p.filterSNPs(missing=m.removeMissing, impact=m.nimpact)
     p.summarize()
-    if m.removeMissing:
-        p.filterSNPs()
     m.writeFastaFiles(p)
     if m.snpsfile != None:
         m.dumpSNPs(p)
