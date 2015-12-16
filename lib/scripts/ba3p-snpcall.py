@@ -171,20 +171,20 @@ for run in MSC.runs:
     run['alignedReads'] = ACT.shell("module load bamtools; bamtools count -in {}".format(bamfile))
     
     run['picard'] = ACT.setFileExt(bamfile, ".picard.bam")
-    job = ACT.submit("picard.qsub AddOrReplaceReadGroups I={} O={} RGID=ID_{} RGLB=LB_{} RGPL=ILLUMINA RGPU=PU_{} RGSM=SM_{}".format(bamfile, run['picard'], name, name, name, name))
+    job1 = ACT.submit("picard.qsub AddOrReplaceReadGroups I={} O={} RGID=ID_{} RGLB=LB_{} RGPL=ILLUMINA RGPU=PU_{} RGSM=SM_{}".format(bamfile, run['picard'], name, name, name, name))
 
     run['dupmark'] = ACT.setFileExt(bamfile, ".dupmark.bam")
     run['metrics'] = name + ".metrics.txt"
-    job = ACT.submit("picard.qsub MarkDuplicates I={} O={} M={} REMOVE_DUPLICATES=true ASSUME_SORTED=true".format(run['picard'], run['dupmark'], run['metrics']), 
-                     after=job)
+    job2 = ACT.submit("picard.qsub MarkDuplicates I={} O={} M={} REMOVE_DUPLICATES=true ASSUME_SORTED=true".format(run['picard'], run['dupmark'], run['metrics']), 
+                     after=job1)
 
     run['realigned'] = name + ".realigned.bam"
-    job = ACT.submit("gatk-realigner.qsub {} {} {}".format(MSC.reference, run['dupmark'], run['realigned']), after=job)
+    job3 = ACT.submit("gatk-realigner.qsub {} {} {}".format(MSC.reference, run['dupmark'], run['realigned']), after=job2)
 
 # Fix mates
 
     run['fixmates'] = name + ".fixmates.bam"
-    ACT.submit("picard.qsub FixMateInformation I={} O={} SORT_ORDER=coordinate".format(run['realigned'], run['fixmates']), after=job, done="picard.@.done")
+    ACT.submit("picard.qsub FixMateInformation I={} O={} SORT_ORDER=coordinate".format(run['realigned'], run['fixmates']), after=job3, done="picard.@.done")
 ACT.wait(("picard.@.done", MSC.nruns))
 
 # And now the main star...
@@ -198,7 +198,7 @@ if MSC.singleVCF:
 else:
     # Start a separate freebayes run for each sample
     for run in MSC.runs:
-        run['vcf'] = name + ".vcf"
+        run['vcf'] = run['name'] + ".vcf"
         ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), done="freebayes.@.done")
     ACT.wait(("freebayes.@.done", MSC.nruns))
 
@@ -325,6 +325,9 @@ ACT.table(data, header=['Chromosome', 'FASTA', 'SNPs'], align="HLR")
 f.close()
 
 # Should do some cleanup at the end...
+
+print "Press Enter to delete unnecessary BAM files."
+ans=raw_input()
 
 toDelete = ""
 for run in MSC.runs:
