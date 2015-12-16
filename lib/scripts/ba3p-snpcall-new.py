@@ -26,11 +26,22 @@ prints an error message and exits. Otherwise, returns fixPath(p)."""
     else:
         return fixPath(p)
 
+# Methods we add to the ACT object
+
+def dump(self):
+    self.message("Title: {}", self.title)
+    self.message("Reference: {}", self.reference)
+    self.message("Genome index: {}", self.genome)
+    self.message("Mapfile: {}", self.mapfile)
+    self.message("SnpEffDB: {}", self.snpeffdb)
+    self.sc.showSamples()
+
+MultiSampleActor.dump = dump
+
 # Initialization
 ACT.loadConfiguration(ACT.Arguments[0])
 SC = SampleCollection(ACT.Conf)
 ACT.sc = SC
-SC.showSamples
 
 # Global configuration
 ACT.title = ACT.getConf("title")
@@ -47,8 +58,10 @@ ACT.snpeffVCF = None
 ACT.csvreport = None
 ACT.htmlreport = None
 
+ACT.dump()
 
-
+print "stopping..."
+a=raw_input()
 
 class ba3pMSC():
     valid = True                # Set to False in case of configuration errors
