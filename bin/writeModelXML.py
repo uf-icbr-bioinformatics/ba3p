@@ -133,12 +133,12 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         main(sys.argv[1:])
     else:
+        progname = os.path.split(sys.argv[0])[1]
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
 Usage: {} infile [outfile]
 
 The input file `infile' should contain location names, one per line. XML output
-will be written to `outfile' if specified, or to standard output.
-""".format(sys.argv[0], sys.argv[0]))
+will be written to `outfile' if specified, or to standard output.\n""".format(progname, progname))
         sys.exit(1)
 
