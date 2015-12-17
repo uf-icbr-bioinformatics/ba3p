@@ -4,7 +4,10 @@
 # Multi-sample SNP calling pipeline, v2.0
 
 import csv
+import sys
 import os.path
+
+from SampleCollection import SampleCollection
 
 def fixPath(path):
     """Add ../ in front of `path' unless it is absolute."""
@@ -31,12 +34,10 @@ prints an error message and exits. Otherwise, returns fixPath(p)."""
 def dump(self):
     self.message("Title: {}", self.title)
     self.message("Reference: {}", self.reference)
-    self.message("Genome index: {}", self.genome)
+    self.message("Genome index: {}", self.btidx)
     self.message("Mapfile: {}", self.mapfile)
     self.message("SnpEffDB: {}", self.snpeffdb)
     self.sc.showSamples()
-
-MultiSampleActor.dump = dump
 
 # Initialization
 ACT.loadConfiguration(ACT.Arguments[0])
@@ -45,8 +46,8 @@ ACT.sc = SC
 
 # Global configuration
 ACT.title = ACT.getConf("title")
+ACT.reference = checkPath(ACT.getConf("reference"))
 ACT.btidx = fixPath(ACT.getConf("btidx"))
-ACT.genome = checkPath(ACT.getConf("genome"))
 ACT.mapfile = checkPath(ACT.getConf("mapfile"))
 ACT.snpeffdb = ACT.getConf("snpeffdb")
 ACT.singleVCF = ACT.getConf("singleVCF")
@@ -58,7 +59,48 @@ ACT.snpeffVCF = None
 ACT.csvreport = None
 ACT.htmlreport = None
 
-ACT.dump()
+dump(ACT)
+
+ACT.script(ACT.title, "BA3P - SNP calling and annotation", "BA3P")
+ACT.begin(timestamp=False)
+
+ACT.scene(1, "General configuration")
+ACT.reportf("""Sample name: <b>{}</b><br>
+Reference genome: <b>{}</b><br>
+Bowtie2 index: <B>{}</b><br>
+""".format(ACT.title, ACT.reference, ACT.btidx))
+if ACT.mapfile != None:
+    ACT.reportf("Chromosome mapping: <b>{}</b><br>".format(ACT.mapfile))
+if ACT.snpeffdb != None:
+    ACT.reportf("snpEff database: <b>{}</b><br>".format(ACT.snpeffdb))
+ACT.reportf("Samples and input files:<br>")
+ACT.table([ [r['name'], r['left'], r['right'] ] for r in SC],
+          header=["Sample", "Left reads", "Right reads"],
+          align="HLL")
+
+ACT.reference = fixPath(ACT.reference)
+ACT.genome = fixPath(ACT.genome)
+if ACT.mapfile != None:
+    ACT.mapfile = fixPath(ACT.mapfile)
+
+#
+# Before we start, check if reference file is indexed
+#
+
+fai = ACT.reference + ".fai" 
+refdict = ACT.setFileExt(ACT.reference, ".dict")
+
+if ACT.missingOrStale(fai, ACT.reference):
+    print "Reference index {} does not exist or is out of date, creating it.".format(fai)
+    ACT.shell("module load samtools; samtools faidx {}", ACT.reference)
+
+if ACT.missingOrStale(refdict, ACT.reference):
+    print "Reference dictionary {} does not exist, creating it.".format(refdict)
+    ACT.submit("picard.qsub CreateSequenceDictionary R={} O={}".format(ACT.reference, refdict), done="dict.done")
+    ACT.wait("dict.done")
+
+# Ensure we don't have old .done files lying around
+ACT.shell("rm -f *.done")
 
 print "stopping..."
 a=raw_input()

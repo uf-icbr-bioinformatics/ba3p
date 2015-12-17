@@ -23,6 +23,9 @@ case "$command" in
     snpcall)
 	script=ba3p-snpcall.py
 	;;
+    snpcall2)
+	script=ba3p-snpcall-new.py
+	;;
     denovo)
 	script=ba3p-denovo.py
 	;;

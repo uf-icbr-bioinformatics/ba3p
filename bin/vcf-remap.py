@@ -10,7 +10,8 @@ def readMap(filename):
     with open(filename, "r") as f:
         for line in f:
             parsed = parseLine(line)
-            trmap[parsed[0]] = parsed[1]
+            if len(parsed) > 1:
+                trmap[parsed[0]] = parsed[1]
     return trmap
 
 def usage():

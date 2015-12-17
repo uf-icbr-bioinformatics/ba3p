@@ -198,7 +198,7 @@ if MSC.singleVCF:
 else:
     # Start a separate freebayes run for each sample
     for run in MSC.runs:
-        run['vcf'] = name + ".vcf"
+        run['vcf'] = run['name'] + ".vcf"
         ACT.submit("freebayes.qsub {} {} {}".format(MSC.reference, run['fixmates'], run['vcf']), done="freebayes.@.done")
     ACT.wait(("freebayes.@.done", MSC.nruns))
 
@@ -325,6 +325,9 @@ ACT.table(data, header=['Chromosome', 'FASTA', 'SNPs'], align="HLR")
 f.close()
 
 # Should do some cleanup at the end...
+
+print "Press Enter to delete unnecessary BAM files."
+ans=raw_input()
 
 toDelete = ""
 for run in MSC.runs:
