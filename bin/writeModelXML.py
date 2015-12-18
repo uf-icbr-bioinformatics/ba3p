@@ -4,7 +4,23 @@
 # ariva@ufl.edu
 
 import sys
+import random
 import os.path
+
+# A small class to represent descriptors
+
+class Descriptor():
+    name = ""
+    description = ""
+    nvalues = 0
+    values = []
+
+    def __init__(self, name, desc="", nvalues=0):
+        self.name = name
+        self.description = desc
+        self.nvalues = nvalues
+        if nvalues > 0:
+            self.values = [ str(random.uniform(-3.0, 3.0)) for i in range(nvalues) ]
 
 def loadLocations(filename, col=0):
     """Load a list of locations from file `filename'. The file
@@ -23,6 +39,44 @@ def writeGeneral(out, locations):
     for loc in locations:
         out.write('    <state code="{}"/>\n'.format(loc))
     out.write('  </generalDataType>\n')
+
+def writeSubstitutionModel(out, locations, descriptors):
+    ndescriptors = len(descriptors)
+    coefficients = ["0.1" for i in range(ndescriptors) ]
+    indicators = [ str(1 - (i & 1)) for i in range(ndescriptors) ]
+
+    sys.stderr.write("Writing Substitution Model\n")
+    out.write("""  <glmSubstitutionModel id="originModel">
+    <dataType idref="geography"/>
+    <rootFrequencies>
+      <frequencyModel>
+        <dataType idref="geography"/>
+          <frequencies>
+            <parameter dimension="{}" value="{}" />
+	  </frequencies>
+      </frequencyModel>
+    </rootFrequencies>
+    <glmModel id="glmModel" family="logLinear"  checkIdentifiability="false">
+      <independentVariables>
+        <parameter id="glmTestCoefficients" value="{}" />
+        <indicator>
+          <parameter id="coefTestIndicator" value="{}" />
+        </indicator>
+        <designMatrix id="testDesignMatrix">
+""".format(len(locations), "", " ".join(coefficients), " ".join(indicators)))
+
+    for d in descriptors:
+        out.write("""
+          <!-- predictor: {} -->
+          <parameter id="{}" value="{}" />
+""".format(d.description, d.name, " ".join(d.values)))
+
+    out.write("""
+        </designMatrix>
+      </independentVariables>
+    </glmModel>
+  </glmSubstitutionModel>
+""")
 
 def makeRewards(n, i):
     d = []
@@ -122,6 +176,8 @@ def main(args):
         out = open(outfile, "w")
     try:
         writeGeneral(out, locations)
+        out.write("\n")
+        writeSubstitutionModel(out, locations, [Descriptor("desc1", "first descriptor", 182), Descriptor("desc2", "second descriptor", 182)])
         out.write("\n")
         writeMarkov(out, locations)
     finally:
