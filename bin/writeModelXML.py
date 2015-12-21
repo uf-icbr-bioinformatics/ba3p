@@ -14,6 +14,9 @@ class Configuration():
     locationsfile = False
     outfile = False
     inverseDescs = False
+    # For the -g option
+    nlocs = 0
+    ndescs = 0
 
     def __init__(self, args):
         next = ""
@@ -22,6 +25,17 @@ class Configuration():
             if next == '-i':
                 self.inverseDescs = True
                 next = ""
+            elif next == 'g0':
+                self.locationsfile = a
+                next = 'g1'
+            elif next == 'g1':
+                self.nlocs = int(a)
+                next = 'g2'
+            elif next == 'g2':
+                self.ndescs = int(a)
+                return
+            elif a == '-g':
+                next = 'g0'
             elif a == '-i':
                 next = a
             elif self.locationsfile:
@@ -229,15 +243,30 @@ def writeMarkov(out, locations):
         for j in range(i + 1, n):
                 data = makeFromToLine(n, j, i)
                 out.write("""      <parameter id="From_{}_To_{}" value="{}" />\n""".format(locations[j], locations[i], " ".join(data)))
-    
 
-def makeRandomDescriptors(ndescriptors, nlocations):
-    x = nlocations * (nlocations - 1)
-    return [ Descriptor("desc{}".format(i+1), "descriptor #{}".format(i+1), x) for i in range (ndescriptors) ]
-        
+#def makeRandomDescriptors(ndescriptors, nlocations):
+#    x = nlocations * (nlocations - 1)
+#    return [ Descriptor("desc{}".format(i+1), "descriptor #{}".format(i+1), x) for i in range (ndescriptors) ]
+
+def writeExampleFile(filename, nlocs, ndescs):
+    with open(filename, "w") as out:
+        out.write("Locations")
+        for i in range(ndescs):
+            out.write("\tdesc{}".format(i+1))
+        out.write("\n")
+        for l in range(nlocs):
+            out.write("LOC{}".format(l+1))
+            for i in range(ndescs):
+                out.write("\t")
+            out.write("\n")
+
 def main(args):
     CONF = Configuration(args)
     out = sys.stdout
+
+    if CONF.nlocs > 0:           # -g mode?
+        writeExampleFile(CONF.locationsfile, CONF.nlocs, CONF.ndescs)
+        return
 
     (locations, descriptors) = parseLocationsTable(CONF.locationsfile)
     for d in descriptors:
@@ -279,6 +308,7 @@ if __name__ == "__main__":
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
 Usage: {} [-i] infile [outfile]
+          [-g] outfile nlocs ndescs
 
 The input file `infile' should contain location names, one per line. Additional columns
 represent descriptors. The first line of the input file should contain descriptor names.
@@ -286,6 +316,9 @@ represent descriptors. The first line of the input file should contain descripto
 XML output will be written to `outfile' if specified, or to standard output.
 
 The -i option causes an inverse descriptor to be added for each descriptors specified
-in the input file.\n""".format(progname, progname))
+in the input file.
+
+If -g is specified, the program will create an empty locations file `outfile' for `nlocs'
+locations and `ndescs' descriptors.\n""".format(progname, progname))
         sys.exit(1)
 
