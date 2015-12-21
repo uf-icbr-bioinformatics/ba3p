@@ -4,6 +4,7 @@
 # ariva@ufl.edu
 
 import sys
+import math
 import random
 import os.path
 
@@ -12,16 +13,16 @@ import os.path
 class Configuration():
     locationsfile = False
     outfile = False
-    ndescriptors = 1
+    inverseDescs = False
 
     def __init__(self, args):
         next = ""
 
         for a in args:
-            if next == '-nd':
-                self.ndescriptors = int(a)
+            if next == '-i':
+                self.inverseDescs = True
                 next = ""
-            elif a == '-nd':
+            elif a == '-i':
                 next = a
             elif self.locationsfile:
                 self.outfile = a
@@ -33,15 +34,51 @@ class Configuration():
 class Descriptor():
     name = ""
     description = ""
-    nvalues = 0
     values = []
+    matrix = []
 
-    def __init__(self, name, desc="", nvalues=0):
+    def __init__(self, name, desc=""):
         self.name = name
         self.description = desc
-        self.nvalues = nvalues
-        if nvalues > 0:
-            self.values = [ str(random.uniform(-3.0, 3.0)) for i in range(nvalues) ]
+        self.values = []
+        self.matrix = []
+
+    def createMatrix(self):
+        nlocs = len(self.values)
+        for i in range(nlocs):
+            for j in range(nlocs):
+                if i != j:
+                    self.matrix.append(math.log(self.values[i] / self.values[j], 2))
+        return self.matrix
+    
+    def inverseDescriptor(self):
+        inv = Descriptor("{}-inv".format(self.name))
+        inv.values = list(self.values)
+        inv.matrix = [ -x for x in self.matrix ]
+        return inv
+    
+def parseLocationsTable(filename):
+    """Reads a table containing locations and descriptors from file `filename'. The file
+should contain location names in the first column, and descriptors in all successive columns.
+The function returns a tuple of two elements: locations and descriptors."""
+    locations = []
+    descriptors = []
+    ndescriptors = 0
+    hdr = True                  # Do we need to read the header?
+    with open(filename, "r") as f:
+        for line in f:
+            parsed = line.strip("\r\n").split("\t")
+            if hdr:
+                descnames = parsed[1:]
+                for d in descnames:
+                    descriptors.append(Descriptor(d))
+                    ndescriptors += 1
+                hdr = False
+            else:
+                locations.append(parsed[0])
+                for d, v in zip(descriptors, parsed[1:]):
+                    d.values.append(float(v))
+    return (locations, descriptors)
 
 def loadLocations(filename, col=0):
     """Load a list of locations from file `filename'. The file
@@ -61,9 +98,21 @@ def writeGeneral(out, locations):
         out.write('    <state code="{}"/>\n'.format(loc))
     out.write('  </generalDataType>\n')
 
+def makeCoefficients(nd):
+    """Returns a list containing `nd' values equal to 1/nd. Takes
+care to ensure they sum to 1."""
+    res = []
+    x = 1.0/nd
+    sum = 0
+    for i in range(nd-1):
+        res.append(str(x))
+        sum += x
+    res.append(str(1-sum))
+    return res
+
 def writeSubstitutionModel(out, locations, descriptors):
     ndescriptors = len(descriptors)
-    coefficients = ["0.1" for i in range(ndescriptors) ]
+    coefficients = makeCoefficients(ndescriptors)
     indicators = [ str(1 - (i & 1)) for i in range(ndescriptors) ]
 
     sys.stderr.write("Writing Substitution Model\n")
@@ -90,7 +139,7 @@ def writeSubstitutionModel(out, locations, descriptors):
         out.write("""
           <!-- predictor: {} -->
           <parameter id="{}" value="{}" />
-""".format(d.description, d.name, " ".join(d.values)))
+        """.format(d.description, d.name, " ".join([str(x) for x in d.matrix])))
 
     out.write("""
         </designMatrix>
@@ -190,16 +239,31 @@ def main(args):
     CONF = Configuration(args)
     out = sys.stdout
 
-    locations = loadLocations(CONF.locationsfile)
+    (locations, descriptors) = parseLocationsTable(CONF.locationsfile)
+    for d in descriptors:
+        d.createMatrix()
+    if CONF.inverseDescs:
+        descs2 = []
+        for d in descriptors:
+            descs2.append(d)
+            d2 = d.inverseDescriptor()
+            descs2.append(d2)
+        descriptors = descs2
+
     nlocations = len(locations)
-    sys.stderr.write("{} locations read from `{}'.\n".format(nlocations, CONF.locationsfile))
+    ndescriptors = len(descriptors)
+    sys.stderr.write("{} locations, {} descriptors read from `{}'.\n".format(nlocations, ndescriptors, CONF.locationsfile))
+    if ndescriptors > 0:
+        sys.stderr.write("Descriptors:\n")
+        for d in descriptors:
+            sys.stderr.write("  " + d.name + "\n")
 
     if CONF.outfile:
         out = open(CONF.outfile, "w")
     try:
         writeGeneral(out, locations)
         out.write("\n")
-        writeSubstitutionModel(out, locations, makeRandomDescriptors(CONF.ndescriptors, nlocations))
+        writeSubstitutionModel(out, locations, descriptors)
         out.write("\n")
         writeMarkov(out, locations)
     finally:
@@ -214,11 +278,14 @@ if __name__ == "__main__":
         progname = os.path.split(sys.argv[0])[1]
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
-Usage: {} [-nd N] infile [outfile]
+Usage: {} [-i] infile [outfile]
 
-The input file `infile' should contain location names, one per line. XML output
-will be written to `outfile' if specified, or to standard output.
+The input file `infile' should contain location names, one per line. Additional columns
+represent descriptors. The first line of the input file should contain descriptor names.
 
-Use the -nd argument to specify the number of descriptors (1 by default).\n""".format(progname, progname))
+XML output will be written to `outfile' if specified, or to standard output.
+
+The -i option causes an inverse descriptor to be added for each descriptors specified
+in the input file.\n""".format(progname, progname))
         sys.exit(1)
 
