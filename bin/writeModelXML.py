@@ -7,6 +7,27 @@ import sys
 import random
 import os.path
 
+# Configuration object
+
+class Configuration():
+    locationsfile = False
+    outfile = False
+    ndescriptors = 1
+
+    def __init__(self, args):
+        next = ""
+
+        for a in args:
+            if next == '-nd':
+                self.ndescriptors = int(a)
+                next = ""
+            elif a == '-nd':
+                next = a
+            elif self.locationsfile:
+                self.outfile = a
+            else:
+                self.locationsfile = a
+
 # A small class to represent descriptors
 
 class Descriptor():
@@ -161,28 +182,29 @@ def writeMarkov(out, locations):
                 out.write("""      <parameter id="From_{}_To_{}" value="{}" />\n""".format(locations[j], locations[i], " ".join(data)))
     
 
+def makeRandomDescriptors(ndescriptors, nlocations):
+    x = nlocations * (nlocations - 1)
+    return [ Descriptor("desc{}".format(i+1), "descriptor #{}".format(i+1), x) for i in range (ndescriptors) ]
+        
 def main(args):
-    outfile = False
+    CONF = Configuration(args)
     out = sys.stdout
-    locationsfile = args[0]
 
-    if len(args) > 1:
-        outfile = args[1]
+    locations = loadLocations(CONF.locationsfile)
+    nlocations = len(locations)
+    sys.stderr.write("{} locations read from `{}'.\n".format(nlocations, CONF.locationsfile))
 
-    locations = loadLocations(locationsfile)
-    sys.stderr.write("{} locations read from `{}'.\n".format(len(locations), locationsfile))
-
-    if outfile:
-        out = open(outfile, "w")
+    if CONF.outfile:
+        out = open(CONF.outfile, "w")
     try:
         writeGeneral(out, locations)
         out.write("\n")
-        writeSubstitutionModel(out, locations, [Descriptor("desc1", "first descriptor", 182), Descriptor("desc2", "second descriptor", 182)])
+        writeSubstitutionModel(out, locations, makeRandomDescriptors(CONF.ndescriptors, nlocations))
         out.write("\n")
         writeMarkov(out, locations)
     finally:
-        if outfile:
-            sys.stderr.write("Output written to `{}'.\n".format(outfile))
+        if CONF.outfile:
+            sys.stderr.write("Output written to `{}'.\n".format(CONF.outfile))
             out.close()
     
 if __name__ == "__main__":
@@ -192,9 +214,11 @@ if __name__ == "__main__":
         progname = os.path.split(sys.argv[0])[1]
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
-Usage: {} infile [outfile]
+Usage: {} [-nd N] infile [outfile]
 
 The input file `infile' should contain location names, one per line. XML output
-will be written to `outfile' if specified, or to standard output.\n""".format(progname, progname))
+will be written to `outfile' if specified, or to standard output.
+
+Use the -nd argument to specify the number of descriptors (1 by default).\n""".format(progname, progname))
         sys.exit(1)
 
