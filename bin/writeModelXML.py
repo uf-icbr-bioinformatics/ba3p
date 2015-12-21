@@ -265,6 +265,7 @@ def main(args):
     out = sys.stdout
 
     if CONF.nlocs > 0:           # -g mode?
+        sys.stderr.write("Writing empty file for {} locations, {} descriptors to `{}'.\n".format(CONF.nlocs, CONF.ndescs, CONF.locationsfile))
         writeExampleFile(CONF.locationsfile, CONF.nlocs, CONF.ndescs)
         return
 
@@ -301,10 +302,11 @@ def main(args):
             out.close()
     
 if __name__ == "__main__":
+    progname = os.path.split(sys.argv[0])[1]
     if len(sys.argv) >= 2:
+        sys.stderr.write("{} - (c) 2015, A. Riva, DiBiG, UF ICBR Bioinformatics\n".format(progname))
         main(sys.argv[1:])
     else:
-        progname = os.path.split(sys.argv[0])[1]
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
 Usage: {} [-i] infile [outfile]
