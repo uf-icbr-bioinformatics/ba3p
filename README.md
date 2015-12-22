@@ -232,7 +232,7 @@ The following command-line options are available (each option has both a short a
 Short | Long | Description
 ------|------|------------
   -m  |--missingChar C  | Use character C to represent unknown alleles (otherwise the reference allele will be used).
-  -o  |--outPattern P   | Use string P as the name of the output file(s). If P contains the sequence {}, it will be replaced by each chromosome name.
+  -o  |--outPattern P   | Use string P as the name of the output file(s). If P contains the sequence {}, it will be replaced by each chromosome name, and a separate output file will be created for each chromosome. Otherwise, output will be written to a single file.
   -b  |--bothAlleles    | If specified, the program will print two bases for each SNP, according to the genotype (AA, AB, or BB).
   -r  |--removeMissing  | If specified, the program will only print SNPs that appear in all the VCF files.
   -q  |--quality Q      | Use Q as the quality threshold. If not specified, the quality threshold will be read from the VCF file, if present, otherwise it will be set to the default value of 30.
@@ -241,3 +241,34 @@ Short | Long | Description
   -a|--annotation A[,A...]  | If snpEff annotations are present, only retain SNPs having an annotation matching one or more of the supplied annotations A. See http://snpeff.sourceforge.net/VCFannotationformat_v1.0.pdf for a list of all valid annotations, or use the -l option.
   -s|--saveSNPs S           | Save SNPs to tab-delimited file S.
   -l|--listEff              | List all valid values for snpEff impact and annotation. When the long form is used, also prints a short description of each annotation (if available).
+
+## sam-remap.py
+**sam-remap.py** converts chromosome names in a SAM file. It is invoked as follows:
+```
+sam-remap.py mapfile
+```
+
+The file *mapfile* should be tab-delimited file with two columns: the first column
+contains chromosome names as they currently appear in the SAM file, and the
+second column contains the new chromosome names. For example, to rename chromosomes
+from roman numerals to standard form:
+
+```
+chrI	chr1
+chrII	chr2
+...
+```
+
+This command is meant to work as a filter: it reads a SAM file from standard
+input and writes a new SAM file to standard output. For example:
+
+```
+> cat existing.sam | sam-remap.py map.txt > converted.sam
+```
+
+To convert chromosome names in a BAM file use something like the following:
+
+```
+> samtools view -h existing.bam | sam-remap.py map.txt > temp.sam
+> samtools view -b -o converted.bam temp.sam; rm temp.sam
+```
