@@ -3,14 +3,15 @@
 **Ba3p** is a collection of pipelines and scripts to perform high-throughput analysis of NGS data from bacterial genomes. It currently includes the following tools:
 
 - [snpcall](#user-content-snpcall)
-- denovo
+- [denovo](#user-content-denovo)
 
 In addition, this package provides a few utilities that are used by ba3p tools, but can also be used independently if desired:
 
 - [swipt.py](#user-content-swiptpy)
 - [VCFmerger.py](#user-content-vcfmergerpy)
-- [sam-remap.py](#user-content-samremap.py)
-- [vcf-remap.py](#user-content-vcfremap.py)
+- [sam-remap.py](#user-content-samremappy)
+- [vcf-remap.py](#user-content-vcfremappy)
+- [writeModelXML.py](#user-content-writemodelxmlpy)
 
 ### Requirements
 Ba3p is designed to run in an HPC environment, and requires the **submit** and **actor** packages.  Please contact the author for details.
@@ -269,6 +270,67 @@ input and writes a new SAM file to standard output. For example:
 To convert chromosome names in a BAM file use something like the following:
 
 ```
-> samtools view -h existing.bam | sam-remap.py map.txt > temp.sam
-> samtools view -b -o converted.bam temp.sam; rm temp.sam
+> samtools view -h existing.bam | sam-remap.py map.txt | samtools view -b -o converted.bam -
 ```
+
+## vcf-remap.py
+**vcf-remap.py** converts chromosome names in a VCF file. It is invoked as follows:
+```
+vcf-remap.py mapfile
+```
+
+The file *mapfile* should be tab-delimited file with two columns: the first column
+contains chromosome names as they currently appear in the VCF file, and the
+second column contains the new chromosome names. For example, to rename chromosomes
+from roman numerals to standard form:
+
+```
+chrI	chr1
+chrII	chr2
+...
+```
+
+This command is meant to work as a filter: it reads a VCF file from standard
+input and writes a new VCF file to standard output. For example:
+
+```
+  > cat existing.vcf | vcf-remap.py map.txt > converted.vcf
+```
+
+## writeModelXML.py
+**writeModelXML.py** is a tool to generate the linear model section of a BEAST XML file.
+It writes an XML fragment containing the three sections **generalDataType**, **glmSubstitutionModel**, and 
+**markovJumpsTreeLikelihood**. This fragment should then be inserted into the overall BEAST file.
+
+The program can be used in two modes, *standard* or *generate*.
+
+### Standard mode
+
+Usage:
+```
+writeModelXML.py [-i] infile [outfile]
+```
+The input file `infile' should be in tab-delimited format and should contain location names, 
+one per line. Additional columns represent descriptors. The first line of the input file 
+should contain descriptor names. For example:
+```
+Location   Desc1   Desc2   Desc3
+LOC1       0.13    1.32    -0.3
+LOC2       -1.14   0.21    -2.0
+LOC3       2.11    0.67    -0.55
+```
+XML output will be written to `outfile' if specified, or to standard output.
+
+The -i option causes an inverse descriptor to be added for each descriptors specified
+in the input file.
+
+### Generate mode
+
+Usage: 
+```
+writeModelXML.py -g outfile nlocs ndescs
+```
+
+If invoked with the -g option, the program will create an empty locations file `outfile' for 
+*nlocs* locations and *ndescs* descriptors. This file can then be used as an input file for
+standard mode, after filling in the descriptor columns.
