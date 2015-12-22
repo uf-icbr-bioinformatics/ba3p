@@ -244,6 +244,8 @@ def writeMarkov(out, locations):
                 data = makeFromToLine(n, j, i)
                 out.write("""      <parameter id="From_{}_To_{}" value="{}" />\n""".format(locations[j], locations[i], " ".join(data)))
 
+    out.write("  </markovJumpsTreeLikelihood>\n")
+
 #def makeRandomDescriptors(ndescriptors, nlocations):
 #    x = nlocations * (nlocations - 1)
 #    return [ Descriptor("desc{}".format(i+1), "descriptor #{}".format(i+1), x) for i in range (ndescriptors) ]
@@ -310,7 +312,7 @@ if __name__ == "__main__":
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
 Usage: {} [-i] infile [outfile]
-          [-g] outfile nlocs ndescs
+       {} [-g] outfile nlocs ndescs
 
 The input file `infile' should contain location names, one per line. Additional columns
 represent descriptors. The first line of the input file should contain descriptor names.
@@ -321,6 +323,6 @@ The -i option causes an inverse descriptor to be added for each descriptors spec
 in the input file.
 
 If -g is specified, the program will create an empty locations file `outfile' for `nlocs'
-locations and `ndescs' descriptors.\n""".format(progname, progname))
+        locations and `ndescs' descriptors.\n""".format(progname, progname, progname))
         sys.exit(1)
 
