@@ -9,8 +9,9 @@ In addition, this package provides a few utilities that are used by ba3p tools, 
 
 - [swipt.py](#user-content-swiptpy)
 - [VCFmerger.py](#user-content-vcfmergerpy)
-- [sam-remap.py](#user-content-samremap.py)
-- [vcf-remap.py](#user-content-vcfremap.py)
+- [sam-remap.py](#user-content-samremappy)
+- [vcf-remap.py](#user-content-vcfremappy)
+- [writeModelXML.py](#user-content-writemodelxmlpy)
 
 ### Requirements
 Ba3p is designed to run in an HPC environment, and requires the **submit** and **actor** packages.  Please contact the author for details.
@@ -295,3 +296,5 @@ input and writes a new VCF file to standard output. For example:
 ```
   > cat existing.vcf | vcf-remap.py map.txt > converted.vcf
 ```
+
+## writeModelXML.py
