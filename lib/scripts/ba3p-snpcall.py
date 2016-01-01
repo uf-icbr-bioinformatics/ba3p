@@ -49,9 +49,9 @@ class ba3pMSC():
         self.csvreport = None
         self.htmlreport = None
 
-        if ACT.missingOrStale(self.genome, warn=True):
+        if ACT.missingOrStale(self.reference, warn=True):
             valid = False
-        if ACT.missingOrStale(self.reference + ".1.bt2", warn=True):
+        if ACT.missingOrStale(self.genome + ".1.bt2", warn=True):
             valid = False
         if self.mapfile and ACT.missingOrStale(self.mapfile, warn=True):
             valid = False
@@ -246,7 +246,7 @@ if MSC.snpeffdb != None:
         MSC.snpeffVCF = "all.snpeff.vcf"
         MSC.csvreport = "allsnps/allsnps.csv"
         MSC.htmlreport = "allsnps/allsnps.html"
-        ACT.submit("snpeff.qsub {} {} {} csv={} html={}".format(snpeffIn, MSC.snpeffVCF, MSC.snpeffdb, MSC.csvreport, MSC.htmlreport), done="snpeff.done")
+        ACT.submit("snpeff.qsub {} {} {} csv={} html={} ver=4.1 dir=P".format(snpeffIn, MSC.snpeffVCF, MSC.snpeffdb, MSC.csvreport, MSC.htmlreport), done="snpeff.done")
         ACT.wait("snpeff.done")
     else:
 
@@ -297,14 +297,16 @@ if MSC.singleVCF:
         invcf = MSC.singleVCF
     else:
         invcf = MSC.snpeffVCF
-    ACT.shell("module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, invcf))
+    vcfmergercmd = "module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, invcf)
 else:
     for run in MSC.runs:
         if 'vcfse' in run:
             allvcfs = allvcfs + run['vcfse'] + " "
         else:
             allvcfs = allvcfs + run['vcf'] + " "
-    ACT.shell("module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, allvcfs))
+    vcfmergercmd = "module load dibig_ba3p; VCFmerger.py -R {} {}".format(report, allvcfs)
+print "Executing: " + vcfmergercmd
+ACT.shell(vcfmergercmd)
 
 ACT.scene(lastscene, "Combined SNP files")
 ACT.reportf("""The VCF files for all samples were combined into a set of multi-fasta files (one for each chromosome).
