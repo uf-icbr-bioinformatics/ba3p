@@ -130,11 +130,11 @@ samples = sample1,sample2
 
 [sample1]
 fastq1=TESTRUN_S1_L001_R1.fastq.gz
-fastq1=TESTRUN_S1_L001_R2.fastq.gz
+fastq2=TESTRUN_S1_L001_R2.fastq.gz
 
 [sample2]
 fastq1=TESTRUN_S2_L001_R1.fastq.gz
-fastq1=TESTRUN_S2_L001_R2.fastq.gz
+fastq2=TESTRUN_S2_L001_R2.fastq.gz
 ```
 
 ## Denovo
