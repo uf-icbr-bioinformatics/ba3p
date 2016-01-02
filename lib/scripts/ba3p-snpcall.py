@@ -338,3 +338,5 @@ for run in MSC.runs:
     toDelete += " " + run['realigned']
 ACT.execute("rm" + toDelete)
 
+print "Script terminated, press Enter to create Zip file."
+ans=raw_input()

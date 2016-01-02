@@ -7,6 +7,7 @@ module load dibig_tools
 SCRIPTS_DIR=$HPC_BA3P_DIR
 
 command=$1
+actor=actor.py
 shift
 
 case "$command" in
@@ -25,6 +26,7 @@ case "$command" in
 	;;
     snpcall2)
 	script=ba3p-snpcall-new.py
+	actor=act.py
 	;;
     denovo)
 	script=ba3p-denovo.py
@@ -36,6 +38,6 @@ then
   echo Please specify which command to run\!
   echo Currently available commands: help, snpcall
 else
-  actor.py -d $SCRIPTS_DIR/lib/scripts/$script -Z $*
+  $actor -d $SCRIPTS_DIR/lib/scripts/$script -Z $*
 fi
 
