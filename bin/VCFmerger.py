@@ -476,6 +476,7 @@ class VCFmerger():
         idx = 0
         snplist = parser.snps[chrom]
         positions = sorted(snplist)
+        print positions
         for vf in parser.files:                             # Go through all files
             for i in range(vf.nsamples):                    # And all samples in each file. i is index of sample in file.
                 f.write(">{}\n".format(vf.samples[i]))      # Write sample name
@@ -483,7 +484,9 @@ class VCFmerger():
                     v = snplist[p]
                     ref = v.reference
                     alt = v.alternate
-                    gt = v.genotypes[idx]
+                    gt = v.genotypes[i]
+                    # print v.genotypes
+                    print (ref, alt, gt)
 
                     if gt == 0:
                         if self.missingChar:
@@ -545,6 +548,11 @@ def main(args):
     files = m.parseOptions(sys.argv[1:])
     p = VCFparser(files, qual=m.quality)
     p.parseAllVCF()
+
+    #snps = p.snps['CFSAN001992']
+    #print snps[141].genotypes
+    #print snps[197].genotypes
+
     p.filterSNPs(missing=m.removeMissing, impact=m.nimpact)
     p.summarize()
     m.writeFastaFiles(p)
