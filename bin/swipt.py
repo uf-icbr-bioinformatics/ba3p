@@ -120,7 +120,7 @@ def doSwipt(G, records, alnlen):
     finally:
         if G.OUTFILE:
             out.close()
-        #os.remove(tmp)
+        os.remove(tmp)
 
 def doSwiptExtra(G, records, alnlen):
     tmp = tmpfile()
@@ -149,11 +149,11 @@ def doSwiptExtra(G, records, alnlen):
                 out.write("{}\t{}\tN/A\t{}\t{}\n".format(p+1, q, pvals['nss'], pvals['chi']))
             elif (not G.PVALTHR) or (pval <= G.PVALTHR):
                 out.write("{}\t{}\t{}\t{}\t{}\n".format(p+1, q, pval, pvals['nss'], pvals['chi']))
-            break
+
     finally:
         if G.OUTFILE:
             out.close()
-        #os.remove(tmp)
+        os.remove(tmp)
     
 # Top-level
 
