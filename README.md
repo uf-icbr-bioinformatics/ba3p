@@ -89,8 +89,8 @@ If singleVCF is False (the default) the pipeline will call SNPs by running a sep
 sample, generating a different VCF file for each one. This is fast, but has the drawback that SNPs observed in one sample
 but not in another one will be treated as reference alleles instead of missing data in the second sample.
 
-If singleVCF is set to True, the pipeline will instead use the multi-sample GATK SNP calling pipeline (see this [Best Practices](https://www.broadinstitute.org/gatk/guide/article?id=3893) page for details. This approach 
-results in a single VCF file at the end, combining data from all samples into a single set of SNPs. See
+If singleVCF is set to True, the pipeline will instead use the multi-sample GATK SNP calling pipeline (see this [Best Practices](https://www.broadinstitute.org/gatk/guide/article?id=3893) page for details). This approach 
+results in a single VCF file at the end, combining data from all samples into a single set of SNPs. Also see
 [this page](https://www.broadinstitute.org/gatk/guide/article?id=4150) for a discussion of the advantages
 of this approach.
 
@@ -105,8 +105,8 @@ the corresponding sections should be labeled **[smpl1]**, **[smpl2]**.
 
 Each section should indicate the name of the two paired-end fastq files:
 ```conf
-fastq1 = (file with left-side reads)
-fastq2 = (file with righ-side reads)
+left  = (file with left-side reads)
+right = (file with righ-side reads)
 ```
 Please note that all pathnames should be either absolute (ie, starting
 with a /) or relative to the directory you are calling the script from.
@@ -135,17 +135,17 @@ and use it as a template to create your own.
 [General]
 title = testrun
 reference = /lfs/scratch/bio/reference/samtools/hg19.fa
-genome = /lfs/scratch/bio/reference/bowtie2/hg19
+btidx = /lfs/scratch/bio/reference/bowtie2/hg19
 snpeffdb = GRCh38.76
 samples = sample1,sample2
 
 [sample1]
-fastq1=TESTRUN_S1_L001_R1.fastq.gz
-fastq2=TESTRUN_S1_L001_R2.fastq.gz
+left  = TESTRUN_S1_L001_R1.fastq.gz
+right = TESTRUN_S1_L001_R2.fastq.gz
 
 [sample2]
-fastq1=TESTRUN_S2_L001_R1.fastq.gz
-fastq2=TESTRUN_S2_L001_R2.fastq.gz
+left  = TESTRUN_S2_L001_R1.fastq.gz
+right = TESTRUN_S2_L001_R2.fastq.gz
 ```
 
 ## Denovo
