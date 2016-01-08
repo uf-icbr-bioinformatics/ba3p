@@ -287,17 +287,19 @@ the VCF file."""
                                         s.alternate = snp
                                         s.snpeff = self.extractSnpEff(line[7])
                                         self.snps[thisChrom][pos] = s
-
-
+                                        
                                     for i in range(vf.nsamples):
                                         dat = alldata[i]
                                         if dat.find(":") > 0:
                                             s.nseen += 1
                                             gt = dat.split(":")[0]
-                                            gt1 = int(gt[0])
-                                            gt2 = int(gt[2])
+                                            if gt[0] == ".":
+                                                s.genotypes[idx + i] = 0
+                                            else:
+                                                gt1 = int(gt[0])
+                                                gt2 = int(gt[2])
                                             # print "{}: {} + {} = {}".format(pos, gt1, gt2, gt1+gt2)
-                                            s.genotypes[idx + i] = gt1 + gt2 + 1    # 1=ref hom, 2=het, 3=alt hom
+                                                s.genotypes[idx + i] = gt1 + gt2 + 1    # 1=ref hom, 2=het, 3=alt hom
 
     def summarize(self):
         print "Chromosomes: {}".format(", ".join(self.chromosomes))

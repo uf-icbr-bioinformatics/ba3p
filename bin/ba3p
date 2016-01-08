@@ -21,10 +21,10 @@ case "$command" in
 	fi
 	exit
 	;;
-    snpcall)
+    snpcall-old)
 	script=ba3p-snpcall.py
 	;;
-    snpcall2)
+    snpcall)
 	script=ba3p-snpcall-new.py
 	actor=act.py
 	;;
