@@ -73,7 +73,7 @@ variables:
 ```conf
 title = (name of your analysis)
 reference = (path to reference sequence in fasta format)
-genome = (path to bowtie2 index of genome)
+btidx = (path to bowtie2 index of genome)
 samples = (names of samples separated by commas).
 ```
 
@@ -82,7 +82,18 @@ In addition, it may contain:
 ```conf
 snpeffdb = (name of snpEff database)
 mapfile = (mapping between reference and snpEff chromosome names).
+singleVCF = (True or False, see below)
 ```
+
+If singleVCF is False (the default) the pipeline will call SNPs by running a separate **freebayes** process for each
+sample, generating a different VCF file for each one. This is fast, but has the drawback that SNPs observed in one sample
+but not in another one will be treated as reference alleles instead of missing data in the second sample.
+
+If singleVCF is set to True, the pipeline will instead use the multi-sample GATK SNP calling pipeline (see this [Best Practices](https://www.broadinstitute.org/gatk/guide/article?id=3893) page for details. This approach 
+results in a single VCF file at the end, combining data from all samples into a single set of SNPs. See
+[this page](https://www.broadinstitute.org/gatk/guide/article?id=4150) for a discussion of the advantages
+of this approach.
+
 The remainder of the configuration file is composed of one section
 for each sample, labeled with its name. For example, if you defined:
 
