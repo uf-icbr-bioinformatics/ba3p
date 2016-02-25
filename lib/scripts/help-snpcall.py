@@ -12,7 +12,7 @@ This script performs the following functions:
 
 - Align short reads to the reference using bowtie2
 - Remove duplicates with GATK
-- SNP calling with freebayes
+- SNP calling with freebayes or with the multi-sample GATK pipeline
 - Optional: SNP annotation using snpEff
 
 The above steps can be performed in parallel for any number of runs. At the end,
@@ -50,13 +50,14 @@ assignments of values to variables in the form: variable = value.
 The first section must be called [General], and must contain the following
 variables:
 
-title = (name of your analysis)
+name = (name of your analysis)
 reference = (path to reference sequence in fasta format)
-genome = (path to bowtie2 index of genome)
+btidx = (path to bowtie2 index of genome)
 samples = (names of samples separated by commas).
 
 In addition, it may contain:
 
+singleVCF = True/False (if True, use the GATK multi-SNP calling pipeline)
 snpeffdb = (name of snpEff database)
 mapfile = (mapping between reference and snpEff chromosome names).
 
@@ -74,8 +75,8 @@ the corresponding sections should be labeled [smpl1], [smpl2].
 
 Each section should indicate the name of the two paired-end fastq files:
 
-fastq1 = (file with left-side reads)
-fastq2 = (file with righ-side reads)
+left = (file with left-side reads)
+right = (file with righ-side reads)
 
 Please note that all pathnames should be either absolute (ie, starting
 with a /) or relative to the directory in which you are calling the script.
@@ -111,16 +112,16 @@ and use it as a template to create your own.
 [General]
 title = testrun
 reference = /lfs/scratch/bio/reference/samtools/hg19.fa
-genome = /lfs/scratch/bio/reference/bowtie2/hg19
+btidx = /lfs/scratch/bio/reference/bowtie2/hg19
 snpeffdb = GRCh38.76
 samples = sample1,sample2
 
 [sample1]
-fastq1=TESTRUN_S1_L001_R1.fastq.gz
-fastq1=TESTRUN_S1_L001_R2.fastq.gz
+left  = TESTRUN_S1_L001_R1.fastq.gz
+right =TESTRUN_S1_L001_R2.fastq.gz
 
 [sample2]
-fastq1=TESTRUN_S2_L001_R1.fastq.gz
-fastq1=TESTRUN_S2_L001_R2.fastq.gz
+left  = TESTRUN_S2_L001_R1.fastq.gz
+right = TESTRUN_S2_L001_R2.fastq.gz
 
 """

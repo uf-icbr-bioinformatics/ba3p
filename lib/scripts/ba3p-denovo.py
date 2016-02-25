@@ -112,12 +112,24 @@ for run in MSC.runs:
     fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), done="fqc2.done")
 ACT.wait([('fqc2.done', MSC.nruns * 2)])
 
-#
-# Once all the bowties are done, we can collect stats (number of aligned reads),
-# and then proceed with the GATK pipeline, followed by SNP calling.
-#
+## Run spads on each sample
 
-#for run in MSC.runs:
-#    ACT.submit("gzip.qsub {}".format(run['sickle1']))
-#    ACT.submit("gzip.qsub {}".format(run['sickle2']))
+nspades = 0
+for smp in MSC.samples:
+    outdir = smp['name'] + ".spades/"
+    smp['spadesdir'] = outdir
+    ACT.mkdir(outdir)
+    ACT.submit("spades.qsub {} {} {}".format(outdir, smp['sickle1'], smp['sickle2']), done="spades.@.done")
+    nspades = nspades + 1
+ACT.wait(("spades.@.done", nspades))
 
+## Create contigs directory and copy fasta files into it
+
+ACT.mkdir("Contigs")
+for smp in MSC.samples:
+    fasta = smp['spadesdir'] + "..."
+    ACT.shell("cp {} Contigs/".format(fasta))
+
+## Run Mauve contig orderer
+
+ACT.submit("mauve-contig-mover.qsub {}".format(ACT.reference))
