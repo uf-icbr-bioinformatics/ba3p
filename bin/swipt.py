@@ -124,7 +124,7 @@ def doSwipt(G, records, alnlen):
 
 def doSwiptExtra(G, records, alnlen):
     tmp = tmpfile()
-    cmdline = [G.PHI, "-o", "-f", tmp]
+    cmdline = [G.PHI, "-o", "-f", tmp, "-w", G.WINSTEP]
     if G.PHIPERM:
         cmdline += ["-p", G.PHIPERM]
 #    print "Executing: ",
