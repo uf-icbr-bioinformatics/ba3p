@@ -71,6 +71,36 @@ class Descriptor():
         inv.matrix = [ -x for x in self.matrix ]
         return inv
     
+def safeLoadTabDelimited(filename):
+    """Reads the contents of tab-delimited file `filename' returning them as a 
+list of lists. Handles lines terminated by \r."""
+    result = []
+    row = []
+    ptr = 0                     # beginning of current token
+    inEol = False               # are we at end of line?
+    eolChars = ['\r', '\n']
+
+    with open(filename, "r") as f:
+        data = f.read()
+
+    for i in range(len(data)):
+        if data[i] == '\t':
+            row.append(data[ptr:i])
+            ptr = i+1
+        elif inEol:
+            if data[i] not in eolChars:
+                inEol = False
+                ptr = i
+        elif data[i] in eolChars:
+            row.append(data[ptr:i])
+            result.append(row)
+            row = []
+            inEol = True
+    row.append(data[ptr:i])
+    result.append(row)
+        
+    return result
+
 def parseLocationsTable(filename):
     """Reads a table containing locations and descriptors from file `filename'. The file
 should contain location names in the first column, and descriptors in all successive columns.
@@ -78,30 +108,29 @@ The function returns a tuple of two elements: locations and descriptors."""
     locations = []
     descriptors = []
     ndescriptors = 0
+
+    rows = safeLoadTabDelimited(filename)
     hdr = True                  # Do we need to read the header?
-    with open(filename, "r") as f:
-        for line in f:
-            parsed = line.strip("\r\n").split("\t")
-            if hdr:
-                descnames = parsed[1:]
-                for d in descnames:
-                    descriptors.append(Descriptor(d))
-                    ndescriptors += 1
-                hdr = False
-            else:
-                locations.append(parsed[0])
-                for d, v in zip(descriptors, parsed[1:]):
-                    d.values.append(float(v))
+    for parsed in rows:
+        if hdr:
+            descnames = parsed[1:]
+            for d in descnames:
+                descriptors.append(Descriptor(d))
+                ndescriptors += 1
+            hdr = False
+        else:
+            locations.append(parsed[0])
+            for d, v in zip(descriptors, parsed[1:]):
+                d.values.append(float(v))
     return (locations, descriptors)
 
 def loadLocations(filename, col=0):
     """Load a list of locations from file `filename'. The file
 is assumed to be tab-delimited, and locations are read from column `col'."""
     locations = []
-    with open(filename, "r") as f:
-        for line in f:
-            parsed = line.strip("\r\n").split("\t")
-            locations.append(parsed[col])
+    rows = safeLoadTabDelimited(filename)
+    for parsed in rows:
+        locations.append(parsed[col])
     return locations
 
 def writeGeneral(out, locations):
