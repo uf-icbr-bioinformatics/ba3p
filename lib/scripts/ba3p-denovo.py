@@ -35,14 +35,14 @@ class ba3pVOPT():
 
         for name in runnames:
             run = {'name': name,
-                   'fastq1': ACT.getConf("fastq1", name),
-                   'fastq2': ACT.getConf("fastq2", name)}
+                   'left': ACT.getConf("left", name),
+                   'right': ACT.getConf("right", name)}
 
-            if run['fastq1'] == None:
-                myutils.message("Configuration error: `fastq1' undefined for sample `{}'".format(name))
+            if run['left'] == None:
+                message("Configuration error: `left' undefined for sample `{}'".format(name))
                 valid = False
-            if run['fastq2'] == None:
-                myutils.message("Configuration error: `fastq2' undefined for sample `{}'".format(name))
+            if run['right'] == None:
+                message("Configuration error: `right' undefined for sample `{}'".format(name))
                 valid = False
 
             self.runs.append(run)
@@ -54,8 +54,8 @@ def dumpmsc(msc):
     message("{} samples:", msc.nruns)
     for run in msc.runs:
         message("  Name: {}", run['name'])
-        message("  Fastq1: {}", run['fastq1'])
-        message("  Fastq2: {}", run['fastq2'])
+        message("  Left: {}", run['left'])
+        message("  Right: {}", run['right'])
         message("")
 
 MSC = ba3pVOPT(ACT)
@@ -74,7 +74,7 @@ ACT.scene(1, "General configuration")
 ACT.reportf("""Experiment name: <b>{}</b><br>
 """.format(MSC.title))
 ACT.reportf("Samples and input files:<br>")
-ACT.table([ [r['name'], r['fastq1'], r['fastq2'] ] for r in MSC.runs],
+ACT.table([ [r['name'], r['left'], r['right'] ] for r in MSC.runs],
           header=["Sample", "Left reads", "Right reads"],
           align="HLL")
 
@@ -87,11 +87,11 @@ ACT.shell("rm -f *.done")
 
 for run in MSC.runs:
     name = run['name']
-    fastq1 = fixPath(run['fastq1'])
-    fastq2 = fixPath(run['fastq2'])
+    left = fixPath(run['left'])
+    right = fixPath(run['right'])
 
-    in1 = os.path.basename(fastq1)
-    in2 = os.path.basename(fastq2)
+    in1 = os.path.basename(left)
+    in2 = os.path.basename(right)
     run['fqcdir1'] = ACT.setFileExt(in1, ".before.fqc", remove=[".fastq", ".gz"])
     run['fqcdir2'] = ACT.setFileExt(in2, ".before.fqc", remove=[".fastq", ".gz"])
     run['fqcdir1a'] = ACT.setFileExt(in1, ".after.fqc", remove=[".fastq", ".gz"])
@@ -102,9 +102,9 @@ for run in MSC.runs:
     ACT.mkdir(run['fqcdir2a'])
     run['sickle1'] = ACT.setFileExt(in1, ".sickle.fastq", remove=[".fastq", ".gz"])
     run['sickle2'] = ACT.setFileExt(in2, ".sickle.fastq", remove=[".fastq", ".gz"])
-    this = ACT.submit("sickle.qsub {} {} {} {}".format(fastq1, fastq2, run['sickle1'], run['sickle2']), done="sickle.done")
-    fqc1 = ACT.submit("fastqc.qsub {} {}".format(fastq1, run['fqcdir1']), done="fqc.done")
-    fqc2 = ACT.submit("fastqc.qsub {} {}".format(fastq2, run['fqcdir2']), done="fqc.done")
+    this = ACT.submit("sickle.qsub {} {} {} {}".format(left, right, run['sickle1'], run['sickle2']), done="sickle.done")
+    fqc1 = ACT.submit("fastqc.qsub {} {}".format(left, run['fqcdir1']), done="fqc.done")
+    fqc2 = ACT.submit("fastqc.qsub {} {}".format(right, run['fqcdir2']), done="fqc.done")
 ACT.wait([('sickle.done', MSC.nruns), ('fqc.done', MSC.nruns * 2)])
 
 for run in MSC.runs:
@@ -112,7 +112,7 @@ for run in MSC.runs:
     fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), done="fqc2.done")
 ACT.wait([('fqc2.done', MSC.nruns * 2)])
 
-## Run spads on each sample
+## Run spades on each sample
 
 nspades = 0
 for smp in MSC.samples:
@@ -127,8 +127,9 @@ ACT.wait(("spades.@.done", nspades))
 
 ACT.mkdir("Contigs")
 for smp in MSC.samples:
-    fasta = smp['spadesdir'] + "..."
-    ACT.shell("cp {} Contigs/".format(fasta))
+    infasta = smp['spadesdir'] + "contigs.fasta"
+    outfasta = smp['name'] + ".spades.fasta"
+    ACT.shell("cp {} Contigs/{}".format(infasta, outfasta))
 
 ## Run Mauve contig orderer
 

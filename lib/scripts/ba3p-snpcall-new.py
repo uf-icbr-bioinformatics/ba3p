@@ -99,11 +99,10 @@ def doVCFsingleOld(self):
 def doVCFsingle(self):
     self.singleVCF = "all.vcf"
     with open("VCFLIST", "w") as v:
-        for smp in self.sc.readsets:
-            smp['vcf'] = self.exclude(smp['name'] + ".g.vcf")
-            v.write(smp['vcf'] + "\n")
-            #self.submit("freebayes.qsub {} {} {} gvcf=Y".format(self.reference, smp['fixmates'], smp['vcf']), done="freebayes.@.done")
-            self.submit("gatk-snpcall-gvcf.qsub {} {} {}".format(self.reference, smp['fixmates'], smp['vcf']), done="freebayes.@.done")
+        for rs in self.sc.readsets:
+            rs['vcf'] = self.exclude(rs['name'] + ".g.vcf")
+            v.write(rs['vcf'] + "\n")
+            self.submit("gatk-snpcall-gvcf.qsub {} {} {}".format(self.reference, rs['bamfile'], rs['vcf']), done="freebayes.@.done")
     self.wait(("freebayes.@.done", self.sc.nreadsets))
     self.submit("gvcf.qsub {} {} {}".format(self.reference, "VCFLIST", self.singleVCF), done="gvcf.done")
     self.wait("gvcf.done")
@@ -258,15 +257,15 @@ ACT.shell("rm -f *.done")
 sickleBowtie(ACT)
 postBowtie(ACT)
 ACT.doGATK()
-#ACT.postGATK()
-ACT.countBAMs("bamcounts.csv", [rs['fixmates'] for rs in ACT.sc.readsets], 'fixedReads')
+ACT.postGATK()
+ACT.countBAMs("bamcounts.csv", [(rs['name'], rs['bamfile']) for rs in ACT.sc.readsets], 'fixedReads')
 
 ACT.scene(2, "Alignment")
 ACT.reportf("""Reads were aligned to the reference genome using <b>bowtie2</b>, after trimming with <b>sickle</b>.
 Aligned reads were processed with the <b>GATK</b> pipeline, to remove duplicates and fix mates.
 The following table shows the original number of aligned reads and the number of reads after GATK processing for each sample.
 Each sample name is linked to the corresponding BAM file.""")
-ACT.table([ ["<a href='{}'>{}</a>".format(rs['fixmates'], rs['name']), rs['alignedReads'], rs['fixedReads'] ] for rs in ACT.sc.readsets], 
+ACT.table([ ["<a href='{}'>{}</a>".format(rs['bamfile'], rs['name']), rs['alignedReads'], rs['fixedReads'] ] for rs in ACT.sc.readsets], 
           header=['Sample', 'Aligned reads', 'Post-GATK reads'], align="HRR")
 
 # SNP calling
