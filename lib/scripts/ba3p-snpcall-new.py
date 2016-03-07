@@ -15,37 +15,6 @@ def linkify(url, name=False):
         name = url
     return "<A href='{}'>{}</A>".format(url, name)
 
-def fixPath(path):
-    """Add ../ in front of `path' unless it is absolute."""
-    if path[0] == "/":
-        return path
-    else:
-        return "../" + path
-
-def checkFile(p, step=False):
-    if os.path.isfile(p):
-        return True
-    else:
-        if step:
-            msg = "Error in {} step: file {} does not exist.\n".format(step, p)
-        else:
-            msg = "Error: file {} does not exist.\n".format(p)
-        sys.stderr.write(msg)
-        sys.exit(-1)
-        
-def checkPath(p):
-    """Checks that filename `p' exists. If the file does not exist and VERIFYFILES is True,
-prints an error message and exits. Otherwise, returns fixPath(p)."""
-    global fixPath
-    global VERIFYFILES
-    if p == None:
-        return p
-    elif not os.path.isfile(p) and VERIFYFILES:
-        print "Error: file {} does not exist or is not readable.".format(p)
-        sys.exit()
-    else:
-        return fixPath(p)
-
 # Methods we add to the ACT object
 
 def dump(self):
