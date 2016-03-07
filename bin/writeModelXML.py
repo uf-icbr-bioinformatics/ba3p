@@ -8,12 +8,32 @@ import math
 import random
 import os.path
 
+# Math
+
+def avg_and_stdev(lst, population=True):
+    """Calculates the standard deviation for a list of numbers."""
+    num_items = len(lst)
+    mean = sum(lst) / num_items
+    differences = [x - mean for x in lst]
+    sq_differences = [d ** 2 for d in differences]
+    ssd = sum(sq_differences)
+ 
+    if population is True:
+        print('This is POPULATION standard deviation.')
+        variance = ssd / num_items
+    else:
+        print('This is SAMPLE standard deviation.')
+        variance = ssd / (num_items - 1)
+    sd = sqrt(variance)
+    return (mean, sd)
+
 # Configuration object
 
 class Configuration():
     locationsfile = False
     outfile = False
     inverseDescs = False
+    normalize = True
     # For the -g option
     nlocs = 0
     ndescs = 0
@@ -36,6 +56,8 @@ class Configuration():
                 return
             elif a == '-g':
                 next = 'g0'
+            elif a == '-n':
+                self.normalize = False
             elif a == '-i':
                 next = a
             elif self.locationsfile:
@@ -57,12 +79,20 @@ class Descriptor():
         self.values = []
         self.matrix = []
 
+    def logAndNormalize(self):
+        nlocs = len(self.values)
+        for i in range(nlocs):
+            self.values[i] = math.log(self.values[i])
+        (avg, stdev) = avg_and_stdev(self.values)
+        for i in range(nlocs):
+            self.values[i] = (self.values[i] - avg) / stdev
+
     def createMatrix(self):
         nlocs = len(self.values)
         for i in range(nlocs):
             for j in range(nlocs):
                 if i != j:
-                    self.matrix.append(math.log(self.values[i] / self.values[j], 2))
+                    self.matrix.append(self.values[i] - self.values[j], 2)
         return self.matrix
     
     def inverseDescriptor(self):
@@ -302,6 +332,8 @@ def main(args):
 
     (locations, descriptors) = parseLocationsTable(CONF.locationsfile)
     for d in descriptors:
+        if CONF.normalize:
+            d.logAndNormalize()
         d.createMatrix()
     if CONF.inverseDescs:
         descs2 = []
@@ -340,11 +372,15 @@ if __name__ == "__main__":
     else:
         sys.stderr.write("""{} - Write the linear model section of a BEAST XML file.
 
-Usage: {} [-i] infile [outfile]
+Usage: {} [-in] infile [outfile]
        {} [-g] outfile nlocs ndescs
 
 The input file `infile' should contain location names, one per line. Additional columns
 represent descriptors. The first line of the input file should contain descriptor names.
+
+Descriptor values are log-transformed and normalized to 0 average and unit standard 
+deviation. If -n is specified, the values are assumed to be already normalized, and these
+operations are not performed.
 
 XML output will be written to `outfile' if specified, or to standard output.
 
@@ -352,6 +388,6 @@ The -i option causes an inverse descriptor to be added for each descriptors spec
 in the input file.
 
 If -g is specified, the program will create an empty locations file `outfile' for `nlocs'
-        locations and `ndescs' descriptors.\n""".format(progname, progname, progname))
+locations and `ndescs' descriptors.\n""".format(progname, progname, progname))
         sys.exit(1)
 
