@@ -27,8 +27,8 @@ def dump(self):
 
 def sickleBowtie(self):
     for rs in self.sc.readsets:
-        fastq1 = fixPath(rs['left'])
-        fastq2 = fixPath(rs['right'])
+        fastq1 = ACT.fixPath(rs['left'])
+        fastq2 = ACT.fixPath(rs['right'])
 
         in1 = os.path.basename(fastq1)
         in2 = os.path.basename(fastq2)
@@ -51,10 +51,9 @@ def sickleBowtie(self):
 def postBowtie(self):
     """Check that the bowtie output files exist and count the number of aligned reads in each.
 NOTE: this should be replaced with countBAMs from rnaseq.py."""
-    global checkFile
     for rs in self.sc.readsets:
         bamfile = rs['bamfile']
-        if checkFile(bamfile, step="bowtie2"):
+        if ACT.checkFile(bamfile, step="bowtie2"):
             rs['alignedReads'] = self.shell("module load bamtools; bamtools count -in {}".format(bamfile))
 
 def doVCFsingleOld(self):
@@ -163,10 +162,10 @@ VERIFYFILES = True
 
 ## Global configuration
 ACT.title = ACT.getConf("title")
-ACT.reference = checkPath(ACT.getConf("reference"))
-checkPath(ACT.getConf("btidx") + ".1.bt2")
-ACT.btidx = fixPath(ACT.getConf("btidx"))
-ACT.mapfile = checkPath(ACT.getConf("mapfile"))
+ACT.reference = ACT.checkPath(ACT.getConf("reference"))
+ACT.checkPath(ACT.getConf("btidx") + ".1.bt2")
+ACT.btidx = ACT.fixPath(ACT.getConf("btidx"))
+ACT.mapfile = ACT.checkPath(ACT.getConf("mapfile"))
 ACT.snpeffdb = ACT.getConf("snpeffdb")
 ACT.snpeffver = ACT.getConf("snpeffver", default="4.1")
 ACT.singleVCF = ACT.getConf("singleVCF")
@@ -181,8 +180,8 @@ ACT.report = "merged-snps.csv"
 
 ## Check that all fastq files exist
 for r in SC.readsets:
-    checkPath(r['left'])
-    checkPath(r['right'])
+    ACT.checkPath(r['left'])
+    ACT.checkPath(r['right'])
 
 dump(ACT)
 
