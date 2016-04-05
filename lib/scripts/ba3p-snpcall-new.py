@@ -27,8 +27,8 @@ def dump(self):
 
 def sickleBowtie(self):
     for rs in self.sc.readsets:
-        fastq1 = ACT.fixPath(rs['left'])
-        fastq2 = ACT.fixPath(rs['right'])
+        fastq1 = self.fixPath(rs['left'])
+        fastq2 = self.fixPath(rs['right'])
 
         in1 = os.path.basename(fastq1)
         in2 = os.path.basename(fastq2)
@@ -53,7 +53,7 @@ def postBowtie(self):
 NOTE: this should be replaced with countBAMs from rnaseq.py."""
     for rs in self.sc.readsets:
         bamfile = rs['bamfile']
-        if ACT.checkFile(bamfile, step="bowtie2"):
+        if self.checkFile(bamfile, step="bowtie2"):
             rs['alignedReads'] = self.shell("module load bamtools; bamtools count -in {}".format(bamfile))
 
 def doVCFsingleOld(self):
@@ -290,7 +290,7 @@ ACT.reportf("""The VCF files for all samples were combined into a set of multi-f
 The following table provides a link to the FASTA file for each chromosome, with the number of SNPs it contains.""")
 ACT.table(data, header=['Chromosome', 'FASTA', 'SNPs'], align="HLR")
 
-print "Script terminated, press Enter to delete unnecessary BAM files."
+print "Script terminated, press Enter to delete unnecessary BAM files and create final ZIP file."
 a=raw_input()
 
 toDelete = ""
@@ -298,6 +298,6 @@ for rs in ACT.sc.readsets:
     toDelete += " " + rs['picard']
     toDelete += " " + rs['dupmark']
     toDelete += " " + rs['realigned']
-ACT.execute("rm" + toDelete)
+ACT.shell("rm" + toDelete)
 
 

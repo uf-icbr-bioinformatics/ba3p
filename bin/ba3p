@@ -30,6 +30,7 @@ case "$command" in
 	;;
     denovo)
 	script=ba3p-denovo.py
+	actor=act.py
 	;;
 esac
 

@@ -1,5 +1,8 @@
+# MultiSampleActor
+
 import csv
 import os.path
+from SampleCollection import SampleCollection
 
 def message(string, *args):
     # Write `string' to standard error. `args' are 
@@ -7,76 +10,58 @@ def message(string, *args):
     sys.stderr.write(string.format(*args))
     sys.stderr.write("\n")
 
-def linkify(url, name=False):
-    if not name:
-        name = url
-    return "<A href='{}'>{}</A>".format(url, name)
+def dump(self):
+    self.message("Title: {}", self.title)
+    self.message("Reference: {}", self.reference)
+    self.sc.showSamples()
 
-def fixPath(path):
-    """Add ../ in front of `path' unless it is absolute."""
-    if path[0] == "/":
-        return path
-    else:
-        return "../" + path
+### Script code starts here
 
-class ba3pVOPT():
-    valid = True                # Set to False in case of configuration errors
-    title = "denovo"            # Title of run
-    runs = []                   # List of runs
-    nruns = 0                   # Number of runs
+## Initialization
 
-    def __init__(self, ACT):
-        conffile = ACT.Arguments[0]
-        conf = ACT.loadConfiguration(conffile)
-        self.title = ACT.getConf("title")
+ACT.loadConfiguration(ACT.Arguments[0])
+print ACT.Conf
+SC = SampleCollection(ACT.Conf)
+ACT.sc = SC
 
-        runnames = ACT.getConf("samples").split(",")
-        runnames = [ s.strip() for s in runnames ]
+ACT.title = ACT.getConf("title")
+ACT.reference = ACT.checkPath(ACT.getConf("reference"))
+ACT.setSteps(ACT.getConf("steps"))
 
-        for name in runnames:
-            run = {'name': name,
-                   'left': ACT.getConf("left", name),
-                   'right': ACT.getConf("right", name)}
+## Check that all fastq files exist
+for r in SC.readsets:
+    ACT.checkPath(r['left'])
+    ACT.checkPath(r['right'])
 
-            if run['left'] == None:
-                message("Configuration error: `left' undefined for sample `{}'".format(name))
-                valid = False
-            if run['right'] == None:
-                message("Configuration error: `right' undefined for sample `{}'".format(name))
-                valid = False
-
-            self.runs.append(run)
-            self.nruns += 1
-
-def dumpmsc(msc):
-    global message
-    message("Title: {}", msc.title)
-    message("{} samples:", msc.nruns)
-    for run in msc.runs:
-        message("  Name: {}", run['name'])
-        message("  Left: {}", run['left'])
-        message("  Right: {}", run['right'])
-        message("")
-
-MSC = ba3pVOPT(ACT)
-
-if not MSC.valid:
-    message("Script cannot be executed due to configuration errors.")
-    exit
-dumpmsc(MSC)
+dump(ACT)
 
 # Script definition 
 
-ACT.script(MSC.title, "BA3P - De-novo Assembly", "BA3P")
+ACT.script(ACT.title, "BA3P - De-novo Assembly", "BA3P")
 ACT.begin(timestamp=False)
 
 ACT.scene(1, "General configuration")
-ACT.reportf("""Experiment name: <b>{}</b><br>
-""".format(MSC.title))
+ACT.reportf("""Experiment name: <b>{}</b><br>""".format(ACT.title))
 ACT.reportf("Samples and input files:<br>")
-ACT.table([ [r['name'], r['left'], r['right'] ] for r in MSC.runs],
+ACT.table([ [r['name'], r['left'], r['right'] ] for r in SC.readsets],
           header=["Sample", "Left reads", "Right reads"],
           align="HLL")
+
+#
+# Before we start, check if reference file is indexed
+#
+
+fai = ACT.reference + ".fai" 
+refdict = ACT.setFileExt(ACT.reference, ".dict")
+
+if ACT.missingOrStale(fai, ACT.reference):
+    print "Reference index {} does not exist or is out of date, creating it.".format(fai)
+    ACT.shell("module load samtools; samtools faidx {}", ACT.reference)
+
+if ACT.missingOrStale(refdict, ACT.reference):
+    print "Reference dictionary {} does not exist, creating it.".format(refdict)
+    ACT.submit("picard.qsub CreateSequenceDictionary R={} O={}".format(ACT.reference, refdict), done="dict.done")
+    ACT.wait("dict.done")
 
 # Ensure we don't have old .done files lying around
 ACT.shell("rm -f *.done")
@@ -85,52 +70,65 @@ ACT.shell("rm -f *.done")
 # First of all run FastQC and sickle on fastq files
 #
 
-for run in MSC.runs:
-    name = run['name']
-    left = fixPath(run['left'])
-    right = fixPath(run['right'])
+## Call trimmomatic on each pair, and then fastqc on the trimmed files
 
-    in1 = os.path.basename(left)
-    in2 = os.path.basename(right)
-    run['fqcdir1'] = ACT.setFileExt(in1, ".before.fqc", remove=[".fastq", ".gz"])
-    run['fqcdir2'] = ACT.setFileExt(in2, ".before.fqc", remove=[".fastq", ".gz"])
-    run['fqcdir1a'] = ACT.setFileExt(in1, ".after.fqc", remove=[".fastq", ".gz"])
-    run['fqcdir2a'] = ACT.setFileExt(in2, ".after.fqc", remove=[".fastq", ".gz"])
-    ACT.mkdir(run['fqcdir1'])
-    ACT.mkdir(run['fqcdir2'])
-    ACT.mkdir(run['fqcdir1a'])
-    ACT.mkdir(run['fqcdir2a'])
-    run['sickle1'] = ACT.setFileExt(in1, ".sickle.fastq", remove=[".fastq", ".gz"])
-    run['sickle2'] = ACT.setFileExt(in2, ".sickle.fastq", remove=[".fastq", ".gz"])
-    this = ACT.submit("sickle.qsub {} {} {} {}".format(left, right, run['sickle1'], run['sickle2']), done="sickle.done")
-    fqc1 = ACT.submit("fastqc.qsub {} {}".format(left, run['fqcdir1']), done="fqc.done")
-    fqc2 = ACT.submit("fastqc.qsub {} {}".format(right, run['fqcdir2']), done="fqc.done")
-ACT.wait([('sickle.done', MSC.nruns), ('fqc.done', MSC.nruns * 2)])
+if ACT.step("sickle") and ACT.step("trimm"):
+    print "Error: please specify only one of 'sickle' and 'trimm'"
+    sys.exit()
 
-for run in MSC.runs:
-    fqc3 = ACT.submit("fastqc.qsub {} {}".format(run['sickle1'], run['fqcdir1a']), done="fqc2.done")
-    fqc4 = ACT.submit("fastqc.qsub {} {}".format(run['sickle2'], run['fqcdir2a']), done="fqc2.done")
-ACT.wait([('fqc2.done', MSC.nruns * 2)])
+if ACT.step("sickle"):
+    ACT.runSickle(fastqc=ACT.step("fastqc"))
+elif ACT.step("trimm"):
+    ACT.runTrimmomatic(fastqc=ACT.step("fastqc"))
+else:
+    ACT.runTrimmomatic(run=False)
 
 ## Run spades on each sample
 
 nspades = 0
-for smp in MSC.samples:
+for smp in SC.samples:
     outdir = smp['name'] + ".spades/"
     smp['spadesdir'] = outdir
+    smprs = smp['readsets'][0]
     ACT.mkdir(outdir)
-    ACT.submit("spades.qsub {} {} {}".format(outdir, smp['sickle1'], smp['sickle2']), done="spades.@.done")
-    nspades = nspades + 1
+    if ACT.step("spades"):
+        ACT.submit("spades.qsub {} {} {}".format(outdir, smprs['left'], smprs['right']), done="spades.@.done")
+        nspades = nspades + 1
 ACT.wait(("spades.@.done", nspades))
 
 ## Create contigs directory and copy fasta files into it
 
 ACT.mkdir("Contigs")
-for smp in MSC.samples:
+ACT.shell("touch dummymap")
+for smp in SC.samples:
     infasta = smp['spadesdir'] + "contigs.fasta"
-    outfasta = smp['name'] + ".spades.fasta"
-    ACT.shell("cp {} Contigs/{}".format(infasta, outfasta))
+    outfasta = "Contigs/" + smp['name'] + ".spades.fasta"
+    #ACT.shell("cp {} Contigs/{}".format(infasta, outfasta))
+    ACT.shell("module load dibig_tools; fastools -map -mapfile-in dummymap -in {} -out {} -if-missing counter -prefix {}_", infasta, outfasta, smp['name'])
 
 ## Run Mauve contig orderer
 
-ACT.submit("mauve-contig-mover.qsub {}".format(ACT.reference))
+if ACT.step("mauve"):
+    ACT.submit("mauve-contig-mover.qsub {}".format(ACT.reference), done="mauve.done")
+    ACT.wait("mauve.done")
+
+## Collect assembled sequences generated by mauve
+
+ACT.mkdir("Alignments")
+for smp in SC.samples:
+    base = "Ordered/" + smp['spadesdir']
+    alns = os.listdir(base)
+    maxa = [0, '']
+    for a in alns:
+        if a[0:9] == 'alignment':
+            i = int(a[9:])
+            if i > maxa[0]:
+                maxa = [i, a]
+    ACT.shell("cp {}/{}/{}.spades.fasta Alignments/".format(base, maxa[1], smp['name']))
+
+if ACT.step("progmauve"):
+    os.chdir("Alignments")
+    ACT.submit("progressive-mauve.qsub denovo-final denovo-final", done="../progr.done")
+    os.chdir("..")
+    ACT.wait("progr.done")
+    
